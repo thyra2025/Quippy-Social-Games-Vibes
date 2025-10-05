@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-export type ThemeType = 'party' | 'neon' | 'campus' | 'sunset' | 'jungle' | 'minimal';
+export type ThemeType = 'party' | 'neon' | 'campus' | 'sunset' | 'jungle' | 'minimal' | 'ocean' | 'slate';
 
 interface ThemeContextType {
   theme: ThemeType;

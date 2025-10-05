@@ -15,6 +15,8 @@ const themes: { value: ThemeType; label: string; colors: string }[] = [
   { value: 'sunset', label: '🌅 Sunset', colors: 'Orange & Coral' },
   { value: 'jungle', label: '🌿 Jungle', colors: 'Green & Teal' },
   { value: 'minimal', label: '✨ Minimal', colors: 'Clean Slate' },
+  { value: 'ocean', label: '🌊 Ocean', colors: 'Clean Blue' },
+  { value: 'slate', label: '⚡ Slate', colors: 'Neutral Gray' },
 ];
 
 export const ThemeSelector = () => {

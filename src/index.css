@@ -120,6 +120,30 @@ All colors MUST be HSL.
     --theme-accent: 200 95% 50%;
     --theme-border: 240 6% 90%;
   }
+
+  /* Theme: Ocean (Clean Blue) */
+  [data-theme="ocean"] {
+    --theme-primary: 207 90% 61%;
+    --theme-secondary: 199 92% 76%;
+    --theme-background: 210 63% 10%;
+    --theme-surface: 210 59% 19%;
+    --theme-text: 207 89% 94%;
+    --theme-text-muted: 207 90% 77%;
+    --theme-accent: 199 92% 56%;
+    --theme-border: 210 60% 29%;
+  }
+
+  /* Theme: Slate (Neutral Gray) */
+  [data-theme="slate"] {
+    --theme-primary: 215 16% 47%;
+    --theme-secondary: 214 32% 84%;
+    --theme-background: 222 47% 11%;
+    --theme-surface: 217 33% 17%;
+    --theme-text: 210 40% 96%;
+    --theme-text-muted: 215 16% 65%;
+    --theme-accent: 215 16% 65%;
+    --theme-border: 217 24% 27%;
+  }
 }
 
 @layer base {
