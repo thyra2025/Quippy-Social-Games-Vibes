@@ -20,6 +20,8 @@ import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoT
 import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
 import { saveRecap } from '@/utils/partyFeedStorage';
 import { GameRecap } from '@/types/partyFeed';
+import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type GamePhase = 'lobby' | 'playing' | 'voting' | 'reveal' | 'recap';
 
@@ -48,6 +50,7 @@ const Room = () => {
   const [usedAnswerIndices, setUsedAnswerIndices] = useState<number[]>([]);
   const [triviaAnswers, setTriviaAnswers] = useState<TriviaAnswer[]>([]);
   const [selectedTriviaAnswer, setSelectedTriviaAnswer] = useState<number | null>(null);
+  const [currentRoundNumber] = useState(1); // Track round number for database queries
 
   const timerDuration = gameMode === 'instant-trivia' ? 30 : 45;
   const { seconds, start: startTimer, reset: resetTimer } = useCountdown(timerDuration, () => {
@@ -62,6 +65,81 @@ const Room = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Fetch submissions from database and set up real-time subscription
+  useEffect(() => {
+    if (!roomId) return;
+
+    let channel: RealtimeChannel;
+
+    const fetchSubmissions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('submissions')
+          .select('*')
+          .eq('room_id', roomId)
+          .eq('round_number', currentRoundNumber)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const formattedSubmissions: Submission[] = data.map(s => ({
+            id: s.id,
+            text: s.content,
+            playerId: s.player_id,
+            playerName: players.find(p => p.id === s.player_id)?.name || 'Unknown',
+            isAI: s.is_ai,
+            avatarColor: players.find(p => p.id === s.player_id)?.avatarColor,
+          }));
+          setSubmissions(formattedSubmissions);
+        }
+      } catch (error) {
+        console.error('Error fetching submissions:', error);
+      }
+    };
+
+    fetchSubmissions();
+
+    // Set up real-time subscription for submissions
+    channel = supabase
+      .channel(`room:${roomId}:submissions`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'submissions',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log('📝 New submission received:', payload);
+          const newSubmission = payload.new;
+          if (newSubmission.round_number === currentRoundNumber) {
+            const formattedSubmission: Submission = {
+              id: newSubmission.id,
+              text: newSubmission.content,
+              playerId: newSubmission.player_id,
+              playerName: players.find(p => p.id === newSubmission.player_id)?.name || 'Unknown',
+              isAI: newSubmission.is_ai,
+              avatarColor: players.find(p => p.id === newSubmission.player_id)?.avatarColor,
+            };
+            setSubmissions(prev => {
+              // Avoid duplicates
+              if (prev.some(s => s.id === formattedSubmission.id)) {
+                return prev;
+              }
+              return [...prev, formattedSubmission];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId, currentRoundNumber]);
 
   // Save recap when game ends
   useEffect(() => {
@@ -154,7 +232,7 @@ const Room = () => {
         ? 10000 + Math.random() * 10000  // 10-20 seconds for trivia
         : 15000 + Math.random() * 20000;
       
-      const timerId = setTimeout(() => {
+      const timerId = setTimeout(async () => {
         if (gameMode === 'instant-trivia' && currentTriviaQuestion) {
           // Trivia mode: select an answer
           const isCorrect = shouldSimulatedPlayerAnswerCorrectly();
@@ -183,16 +261,23 @@ const Room = () => {
             answerText = getRandomStatement(language);
           }
           
-          const submission: Submission = {
-            id: Math.random().toString(36).substring(2, 9),
-            text: answerText,
-            playerId: player.id,
-            playerName: player.name,
-            isAI: false,
-            avatarColor: player.avatarColor,
-          };
+          try {
+            // Save to database
+            const { error } = await supabase
+              .from('submissions')
+              .insert({
+                room_id: roomId,
+                player_id: player.id,
+                content: answerText,
+                is_ai: false,
+                round_number: currentRoundNumber,
+              });
 
-          setSubmissions(prev => [...prev, submission]);
+            if (error) throw error;
+            console.log('🤖 Simulated player submitted:', player.name);
+          } catch (error) {
+            console.error('Error saving simulated submission:', error);
+          }
         }
       }, delay);
 
@@ -200,32 +285,46 @@ const Room = () => {
     });
   }, [gamePhase, simulatedPlayers.length, gameMode, currentTriviaQuestion]);
 
-  const handleSubmitAnswer = () => {
+  const handleSubmitAnswer = async () => {
     if (!playerAnswer.trim()) return;
 
-    const newSubmission: Submission = {
-      id: Math.random().toString(36).substring(2, 9),
-      text: playerAnswer,
-      playerId: currentPlayerId,
-      playerName: currentPlayerName,
-      isAI: false,
-      avatarColor: currentPlayer?.avatarColor,
-    };
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('submissions')
+        .insert({
+          room_id: roomId,
+          player_id: currentPlayerId,
+          content: playerAnswer,
+          is_ai: false,
+          round_number: currentRoundNumber,
+        });
 
-    setSubmissions(prev => [...prev, newSubmission]);
-    setHasSubmitted(true);
-    setPlayerAnswer('');
-    
-    toast({
-      title: t('submitted'),
-      description: t('waiting'),
-    });
+      if (error) throw error;
 
-    const totalPlayers = 1 + simulatedPlayers.length;
-    if (submissions.length + 1 >= totalPlayers) {
-      setTimeout(() => {
-        handlePlayingPhaseEnd();
-      }, 2000);
+      setHasSubmitted(true);
+      setPlayerAnswer('');
+      
+      toast({
+        title: t('submitted'),
+        description: t('waiting'),
+      });
+
+      console.log('👤 Player submitted:', currentPlayerName);
+
+      const totalPlayers = 1 + simulatedPlayers.length;
+      if (submissions.length + 1 >= totalPlayers) {
+        setTimeout(() => {
+          handlePlayingPhaseEnd();
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      toast({
+        title: t('error'),
+        description: 'Failed to submit answer. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -258,7 +357,7 @@ const Room = () => {
     }
   };
 
-  const handlePlayingPhaseEnd = () => {
+  const handlePlayingPhaseEnd = async () => {
     if (gameMode === 'instant-trivia') {
       // For trivia, go to reveal phase instead of voting
       resetTimer();
@@ -272,35 +371,52 @@ const Room = () => {
 
     // Add AI submission for Who Wrote This and Two Truths modes
     if (gameMode === 'who-wrote-this') {
-      const aiSubmission: Submission = {
-        id: 'ai-' + Math.random().toString(36).substring(2, 9),
-        text: getAIAnswer(currentPrompt, language),
-        playerId: 'ai',
-        playerName: 'AI',
-        isAI: true
-      };
-      console.log('🤖 AI submission created:', { text: aiSubmission.text, isAI: aiSubmission.isAI });
-      setSubmissions(prev => {
-        const allSubmissions = [...prev, aiSubmission];
-        return allSubmissions.sort(() => Math.random() - 0.5);
-      });
+      const aiText = getAIAnswer(currentPrompt, language);
+      console.log('🤖 AI submission created:', { text: aiText, isAI: true });
+      
+      try {
+        const { error } = await supabase
+          .from('submissions')
+          .insert({
+            room_id: roomId,
+            player_id: 'ai',
+            content: aiText,
+            is_ai: true,
+            round_number: currentRoundNumber,
+          });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving AI submission:', error);
+      }
     } else if (gameMode === 'two-truths') {
-      const aiSubmission: Submission = {
-        id: 'ai-' + Math.random().toString(36).substring(2, 9),
-        text: getRandomAIStatement(language),
-        playerId: 'ai',
-        playerName: 'AI',
-        isAI: true
-      };
-      console.log('🤖 AI statement created:', { text: aiSubmission.text, isAI: aiSubmission.isAI });
-      setSubmissions(prev => {
-        const allSubmissions = [...prev, aiSubmission];
-        return allSubmissions.sort(() => Math.random() - 0.5);
-      });
+      const aiText = getRandomAIStatement(language);
+      console.log('🤖 AI statement created:', { text: aiText, isAI: true });
+      
+      try {
+        const { error } = await supabase
+          .from('submissions')
+          .insert({
+            room_id: roomId,
+            player_id: 'ai',
+            content: aiText,
+            is_ai: true,
+            round_number: currentRoundNumber,
+          });
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving AI submission:', error);
+      }
     } else if (gameMode === 'caption-cascade') {
       // No AI for caption cascade, just shuffle
       setSubmissions(prev => [...prev].sort(() => Math.random() - 0.5));
     }
+
+    // Shuffle submissions locally (will be synced from database)
+    setTimeout(() => {
+      setSubmissions(prev => [...prev].sort(() => Math.random() - 0.5));
+    }, 500);
 
     resetTimer();
     setGamePhase('voting');
