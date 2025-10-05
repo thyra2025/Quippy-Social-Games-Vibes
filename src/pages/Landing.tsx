@@ -8,6 +8,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { Card } from '@/components/ui/card';
+import heroImage from '@/assets/hero-quippy.png';
 import {
   Dialog,
   DialogContent,
@@ -147,6 +148,13 @@ const Landing = () => {
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-2xl w-full space-y-8">
+          {/* Hero Image */}
+          <img 
+            src={heroImage}
+            alt="People playing Quippy together"
+            className="w-full max-w-3xl mx-auto mb-8 rounded-lg"
+          />
+          
           {/* Logo and Title */}
           <div className="space-y-4">
             <div className="inline-block p-6 rounded-full theme-gradient">
