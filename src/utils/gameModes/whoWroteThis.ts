@@ -379,15 +379,40 @@ export function getAIAnswer(prompt: string, language: Language = 'en'): string {
 export function getSimulatedAnswer(prompt: string, language: Language = 'en'): string {
   console.log('🎭 getSimulatedAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
   const languageAnswers = SIMULATED_ANSWERS_BY_LANGUAGE[language] || SIMULATED_ANSWERS_BY_LANGUAGE.en;
-  const answers = languageAnswers[prompt] || [];
-  
-  if (answers.length === 0 && language !== 'en') {
-    console.log('⚠️ No simulated answers found for prompt in', language, '- falling back to English');
-    const englishAnswers = SIMULATED_ANSWERS_BY_LANGUAGE.en[prompt] || [];
-    return englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+  let answers = languageAnswers[prompt] || [];
+
+  // Prefer simulated answers for the SAME prompt in the SAME language
+  if (answers.length > 0) {
+    const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
+    console.log('✅ Selected simulated answer:', selectedAnswer.substring(0, 50));
+    return selectedAnswer;
   }
-  
-  const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
-  console.log('✅ Selected simulated answer:', selectedAnswer.substring(0, 50));
-  return selectedAnswer;
+
+  // Fallback 1: Use AI answers for the SAME prompt in the SAME language (keeps localization)
+  const aiSameLang = AI_ANSWERS_BY_LANGUAGE[language]?.[prompt] || [];
+  if (aiSameLang.length > 0) {
+    const selected = aiSameLang[Math.floor(Math.random() * aiSameLang.length)] || '';
+    console.log('↩️ Falling back to AI answers in same language for simulated:', selected.substring(0, 50));
+    return selected;
+  }
+
+  // Fallback 2: Try English simulated answers for this prompt
+  const englishSim = SIMULATED_ANSWERS_BY_LANGUAGE.en[prompt] || [];
+  if (englishSim.length > 0) {
+    const selected = englishSim[Math.floor(Math.random() * englishSim.length)] || '';
+    console.log('⚠️ No simulated answers in', language, '- falling back to English simulated:', selected.substring(0, 50));
+    return selected;
+  }
+
+  // Fallback 3: English AI answers for the same prompt
+  const aiEnglish = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
+  if (aiEnglish.length > 0) {
+    const selected = aiEnglish[Math.floor(Math.random() * aiEnglish.length)] || '';
+    console.log('↩️ Falling back to English AI answers for simulated:', selected.substring(0, 50));
+    return selected;
+  }
+
+  // Final fallback: empty string (shouldn't usually happen)
+  console.warn('❌ No answers found for prompt in any language');
+  return '';
 }
