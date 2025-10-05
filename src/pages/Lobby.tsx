@@ -180,25 +180,36 @@ const Lobby = () => {
                 <p className="text-sm text-muted-foreground">{t('chooseGameMode')}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {GAME_MODES.map((mode) => (
-                  <button
-                    key={mode.id}
-                    onClick={() => setSelectedMode(mode.id)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      selectedMode === mode.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">{mode.icon}</span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold mb-1">{mode.name}</h4>
-                        <p className="text-sm text-muted-foreground">{mode.description}</p>
+                {GAME_MODES.map((mode) => {
+                  const titleKey = mode.id === 'who-wrote-this' ? 'whoWroteThis' :
+                                  mode.id === 'caption-cascade' ? 'captionCascade' :
+                                  mode.id === 'two-truths' ? 'twoTruthsBot' :
+                                  'instantTrivia';
+                  const descKey = mode.id === 'who-wrote-this' ? 'whoWroteThisDesc' :
+                                 mode.id === 'caption-cascade' ? 'captionCascadeDesc' :
+                                 mode.id === 'two-truths' ? 'twoTruthsBotDesc' :
+                                 'instantTriviaDesc';
+                  
+                  return (
+                    <button
+                      key={mode.id}
+                      onClick={() => setSelectedMode(mode.id)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        selectedMode === mode.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-3xl">{mode.icon}</span>
+                        <div className="flex-1">
+                          <h4 className="font-semibold mb-1">{t(titleKey as any)}</h4>
+                          <p className="text-sm text-muted-foreground">{t(descKey as any)}</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </Card>
