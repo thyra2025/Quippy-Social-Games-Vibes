@@ -99,6 +99,7 @@ export const translations = {
     step1: "1. Create or join a room",
     step2: "2. Share the link with friends via WhatsApp",
     step3: "3. Play together in real-time - no app needed!",
+    simulatedPlayersHelp: "AI players let you test the game solo or fill empty rooms while waiting for friends",
   },
   es: {
     startGame: "Comenzar Juego",
@@ -195,6 +196,7 @@ export const translations = {
     step1: "1. Crea o únete a una sala",
     step2: "2. Comparte el enlace con amigos por WhatsApp",
     step3: "3. Jueguen juntos en tiempo real - ¡sin app!",
+    simulatedPlayersHelp: "Los jugadores IA te permiten probar el juego solo o llenar salas vacías mientras esperas amigos",
   },
   fr: {
     startGame: "Commencer le Jeu",
@@ -291,6 +293,7 @@ export const translations = {
     step1: "1. Créez ou rejoignez une salle",
     step2: "2. Partagez le lien avec des amis via WhatsApp",
     step3: "3. Jouez ensemble en temps réel - aucune app requise!",
+    simulatedPlayersHelp: "Les joueurs IA vous permettent de tester le jeu seul ou de remplir les salles vides en attendant des amis",
   },
   pt: {
     startGame: "Começar Jogo",
@@ -387,6 +390,7 @@ export const translations = {
     step1: "1. Crie ou entre em uma sala",
     step2: "2. Compartilhe o link com amigos via WhatsApp",
     step3: "3. Joguem juntos em tempo real - sem app!",
+    simulatedPlayersHelp: "Jogadores IA permitem testar o jogo sozinho ou preencher salas vazias enquanto espera amigos",
   },
   pidgin: {
     startGame: "Start di Game",
@@ -483,6 +487,7 @@ export const translations = {
     step1: "1. Make room or join room",
     step2: "2. Share di link for WhatsApp",
     step3: "3. Play together - no need to download app!",
+    simulatedPlayersHelp: "AI players go help you test di game alone or fill empty room while you dey wait for your people",
   },
 };
 

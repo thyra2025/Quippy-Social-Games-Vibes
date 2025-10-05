@@ -467,7 +467,7 @@ const Lobby = () => {
                 {t('addSimulated')}
               </Label>
               <p className="text-sm text-muted-foreground">
-                {t('testWithBots')}
+                {t('simulatedPlayersHelp')}
               </p>
             </div>
             <Switch
