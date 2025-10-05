@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { generateRoomLink } from '@/utils/whatsapp';
 import { toast } from '@/hooks/use-toast';
@@ -24,6 +26,7 @@ export interface Player {
 const Lobby = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [playerName, setPlayerName] = useState('');
   const [hasJoined, setHasJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -86,9 +89,12 @@ const Lobby = () => {
         <header className="p-4 flex justify-between items-center border-b border-border">
           <Button variant="ghost" onClick={handleLeave}>
             <LogOut className="h-5 w-5 mr-2" />
-            Leave
+            {t('leave')}
           </Button>
-          <ThemeSelector />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
         </header>
 
         <main className="flex-1 flex items-center justify-center p-6">
@@ -103,9 +109,9 @@ const Lobby = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Your Name</label>
+                <label className="text-sm font-medium">{t('playerName')}</label>
                 <Input
-                  placeholder="Enter your name"
+                  placeholder={t('enterName')}
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleJoinLobby()}
@@ -118,7 +124,7 @@ const Lobby = () => {
                 disabled={!playerName.trim()}
                 className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
               >
-                Join Lobby
+                {t('joinParty')}
               </Button>
             </div>
           </Card>
@@ -132,7 +138,7 @@ const Lobby = () => {
       <header className="p-4 flex justify-between items-center border-b border-border">
         <Button variant="ghost" onClick={handleLeave}>
           <LogOut className="h-5 w-5 mr-2" />
-          Leave
+          {t('leave')}
         </Button>
         <div className="flex items-center gap-2">
           <Button
@@ -141,8 +147,9 @@ const Lobby = () => {
             className="rounded-xl gap-2"
           >
             <History className="h-4 w-4" />
-            Party Feed
+            {t('partyFeed')}
           </Button>
+          <LanguageSelector />
           <ThemeSelector />
         </div>
       </header>
@@ -151,7 +158,7 @@ const Lobby = () => {
         {/* Room Info */}
         <Card className="card-game text-center space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-2">Room Code</p>
+            <p className="text-sm text-muted-foreground mb-2">{t('roomCode')}</p>
             <div className="inline-block px-6 py-3 rounded-xl theme-gradient">
               <p className="text-3xl font-bold text-white tracking-wider">{roomId}</p>
             </div>
@@ -169,7 +176,7 @@ const Lobby = () => {
           <Card className="card-game">
             <div className="space-y-4">
               <div>
-                <Label className="text-base font-semibold">Game Mode</Label>
+                <Label className="text-base font-semibold">{t('selectGameMode')}</Label>
                 <p className="text-sm text-muted-foreground">Choose how you want to play</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -202,7 +209,7 @@ const Lobby = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="simulated-mode" className="text-base font-semibold">
-                Add simulated players
+                {t('addSimulated')}
               </Label>
               <p className="text-sm text-muted-foreground">
                 Test the game solo with AI players
@@ -222,7 +229,7 @@ const Lobby = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Players ({players.length})
+                {t('players')} ({players.length})
               </h3>
               {isHost && (
                 <Button
@@ -231,7 +238,7 @@ const Lobby = () => {
                   className="theme-gradient text-white font-semibold gap-2 rounded-xl"
                 >
                   <Play className="h-4 w-4" />
-                  Start Game
+                  {t('startGame')}
                 </Button>
               )}
             </div>

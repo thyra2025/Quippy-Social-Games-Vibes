@@ -4,6 +4,8 @@ import { ArrowLeft, Trophy, Users, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { RecapCard } from '@/components/RecapCard';
 import { getRecaps } from '@/utils/partyFeedStorage';
 import { GameRecap } from '@/types/partyFeed';
@@ -17,6 +19,7 @@ import {
 const PartyFeed = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [recaps, setRecaps] = useState<GameRecap[]>([]);
   const [selectedRecap, setSelectedRecap] = useState<GameRecap | null>(null);
 
@@ -45,15 +48,18 @@ const PartyFeed = () => {
       <header className="p-4 flex justify-between items-center border-b border-border">
         <Button variant="ghost" onClick={handleBack}>
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Lobby
+          {t('backToLobby')}
         </Button>
-        <ThemeSelector />
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <ThemeSelector />
+        </div>
       </header>
 
       <main className="flex-1 p-6 max-w-4xl mx-auto w-full">
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold">🎊 Party Feed</h1>
+            <h1 className="text-4xl font-bold">🎊 {t('partyFeed')}</h1>
             <p className="text-muted-foreground">
               Relive your best moments from this room
             </p>
@@ -64,13 +70,13 @@ const PartyFeed = () => {
               <div className="space-y-4">
                 <div className="text-6xl">🎮</div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold">No games played yet</h3>
+                  <h3 className="text-xl font-bold">{t('noRecaps')}</h3>
                   <p className="text-muted-foreground">
                     Start your first round to see recaps here!
                   </p>
                 </div>
                 <Button onClick={handleBack} className="theme-gradient text-white rounded-xl">
-                  Start Playing
+                  {t('startGame')}
                 </Button>
               </div>
             </Card>
@@ -119,7 +125,7 @@ const PartyFeed = () => {
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
                   <Trophy className="h-6 w-6 text-amber-500" />
                   <div>
-                    <p className="font-semibold text-amber-500">Winner</p>
+                    <p className="font-semibold text-amber-500">{t('winner')}</p>
                     <p>{selectedRecap.winnerInfo}</p>
                   </div>
                 </div>
@@ -129,7 +135,7 @@ const PartyFeed = () => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      <h4 className="font-semibold">Player Answers</h4>
+                      <h4 className="font-semibold">{t('players')}</h4>
                     </div>
                     {selectedRecap.triviaAnswers.map((answer, idx) => (
                       <Card

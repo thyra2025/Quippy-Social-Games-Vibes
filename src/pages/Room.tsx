@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { generateRoomLink } from '@/utils/whatsapp';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -25,6 +27,7 @@ const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   
   const gameMode: GameMode = location.state?.gameMode || 'who-wrote-this';
   const players = (location.state?.players as Player[]) || [];
@@ -509,9 +512,12 @@ const Room = () => {
         <header className="p-4 flex justify-between items-center border-b border-border">
           <Button variant="ghost" onClick={handleLeave}>
             <LogOut className="h-5 w-5 mr-2" />
-            Leave Game
+            {t('leave')}
           </Button>
-          <ThemeSelector />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
         </header>
 
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
@@ -540,9 +546,12 @@ const Room = () => {
         <header className="p-4 flex justify-between items-center border-b border-border">
           <Button variant="ghost" onClick={handleLeave}>
             <LogOut className="h-5 w-5 mr-2" />
-            Leave Game
+            {t('leave')}
           </Button>
-          <ThemeSelector />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
         </header>
 
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
@@ -551,7 +560,7 @@ const Room = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Time Remaining</span>
+                <span className="font-semibold">{t('timeRemaining')}</span>
               </div>
               <div className="text-3xl font-bold text-primary">{seconds}s</div>
             </div>
@@ -636,9 +645,9 @@ const Room = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    {gameMode === 'caption-cascade' ? 'Your Caption' : 
-                     gameMode === 'two-truths' ? 'Your True Statement' : 
-                     'Your Answer'}
+                    {gameMode === 'caption-cascade' ? t('submitCaption') : 
+                     gameMode === 'two-truths' ? t('submitStatement') : 
+                     t('yourAnswer')}
                   </label>
                   <Textarea
                     placeholder={
@@ -661,9 +670,9 @@ const Room = () => {
                   className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
                 >
                   <Send className="h-5 w-5 mr-2" />
-                  Submit {gameMode === 'caption-cascade' ? 'Caption' : 
-                          gameMode === 'two-truths' ? 'Statement' : 
-                          'Answer'}
+                  {gameMode === 'caption-cascade' ? t('submitCaption') : 
+                   gameMode === 'two-truths' ? t('submitStatement') : 
+                   t('submitAnswer')}
                 </Button>
               </div>
             </Card>
@@ -672,11 +681,11 @@ const Room = () => {
               <div className="py-8">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
                 <h3 className="text-xl font-bold">
-                  {gameMode === 'caption-cascade' ? 'Caption' : 
-                   gameMode === 'two-truths' ? 'Statement' : 
-                   'Answer'} Submitted!
+                  {gameMode === 'caption-cascade' ? t('submitCaption') : 
+                   gameMode === 'two-truths' ? t('submitStatement') : 
+                   t('submitAnswer')}!
                 </h3>
-                <p className="text-muted-foreground mt-2">Waiting for other players...</p>
+                <p className="text-muted-foreground mt-2">{t('waiting')}</p>
               </div>
             </Card>
           )}
@@ -705,15 +714,18 @@ const Room = () => {
         <header className="p-4 flex justify-between items-center border-b border-border">
           <Button variant="ghost" onClick={handleLeave}>
             <LogOut className="h-5 w-5 mr-2" />
-            Leave Game
+            {t('leave')}
           </Button>
-          <ThemeSelector />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
         </header>
 
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
           <Card className="card-game text-center">
             <h2 className="text-2xl font-bold mb-2">{votingPrompt}</h2>
-            <p className="text-muted-foreground">{votingInstruction}</p>
+            <p className="text-muted-foreground">{t('voting')}</p>
             {gameMode === 'caption-cascade' && currentImage && (
               <div className="mt-4">
                 <img 
@@ -810,9 +822,12 @@ const Room = () => {
         <header className="p-4 flex justify-between items-center border-b border-border">
           <Button variant="ghost" onClick={handleLeave}>
             <LogOut className="h-5 w-5 mr-2" />
-            Leave Game
+            {t('leave')}
           </Button>
-          <ThemeSelector />
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
         </header>
 
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
@@ -892,9 +907,12 @@ const Room = () => {
       <header className="p-4 flex justify-between items-center border-b border-border">
         <Button variant="ghost" onClick={handleLeave}>
           <LogOut className="h-5 w-5 mr-2" />
-          Leave Game
+          {t('leave')}
         </Button>
-        <ThemeSelector />
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <ThemeSelector />
+        </div>
       </header>
 
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
@@ -1025,14 +1043,14 @@ const Room = () => {
             onClick={handlePlayAgain}
             className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
           >
-            Play Again
+            {t('playAgain')}
           </Button>
 
           <Card className="card-game">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Share Your Results</h3>
+                <h3 className="font-semibold">{t('shareWhatsApp')}</h3>
               </div>
               <WhatsAppShareButton
                 text={

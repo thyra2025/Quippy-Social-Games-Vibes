@@ -4,11 +4,14 @@ import { Sparkles, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeSelector } from '@/components/ThemeSelector';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { Card } from '@/components/ui/card';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [roomCode, setRoomCode] = useState('');
 
   const generateRoomId = () => {
@@ -34,7 +37,10 @@ const Landing = () => {
           <Sparkles className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold">Quippy</h1>
         </div>
-        <ThemeSelector />
+        <div className="flex items-center gap-2">
+          <LanguageSelector />
+          <ThemeSelector />
+        </div>
       </header>
 
       {/* Hero Section */}
@@ -62,13 +68,13 @@ const Landing = () => {
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Start a Party</h3>
+                  <h3 className="text-2xl font-bold mb-2">{t('startParty')}</h3>
                   <p className="text-muted-foreground">
                     Create a new room and invite your friends via WhatsApp
                   </p>
                 </div>
                 <Button className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl">
-                  Start Party
+                  {t('startParty')}
                 </Button>
               </div>
             </Card>
@@ -80,14 +86,14 @@ const Landing = () => {
                   <Zap className="h-6 w-6 text-secondary" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Join a Party</h3>
+                  <h3 className="text-2xl font-bold mb-2">{t('joinAParty')}</h3>
                   <p className="text-muted-foreground">
                     Enter a room code to join your friends
                   </p>
                 </div>
                 <div className="space-y-2">
                   <Input
-                    placeholder="Enter Room Code"
+                    placeholder={t('enterRoomCode')}
                     value={roomCode}
                     onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                     onKeyPress={(e) => e.key === 'Enter' && handleJoinParty()}
@@ -100,7 +106,7 @@ const Landing = () => {
                     variant="outline"
                     className="w-full py-6 text-lg rounded-xl"
                   >
-                    Join Party
+                    {t('join')}
                   </Button>
                 </div>
               </div>
