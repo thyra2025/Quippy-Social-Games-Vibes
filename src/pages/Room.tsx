@@ -129,7 +129,7 @@ const Room = () => {
     } else if (gameMode === 'caption-cascade') {
       setCurrentImage(getRandomImage());
     } else if (gameMode === 'two-truths') {
-      setCurrentPrompt('Write one true statement about yourself');
+      setCurrentPrompt(t('writeTrueStatement'));
     } else if (gameMode === 'instant-trivia') {
       setCurrentTriviaQuestion(getRandomQuestion(language));
     }
@@ -532,8 +532,8 @@ const Room = () => {
   if (gamePhase === 'playing') {
     let promptText = '';
     if (gameMode === 'who-wrote-this') promptText = currentPrompt;
-    else if (gameMode === 'caption-cascade') promptText = 'Write the funniest caption for this image';
-    else if (gameMode === 'two-truths') promptText = currentPrompt;
+    else if (gameMode === 'caption-cascade') promptText = t('writeCaption');
+    else if (gameMode === 'two-truths') promptText = t('writeTrueStatement');
 
     return (
       <div className="min-h-screen flex flex-col">
@@ -569,10 +569,10 @@ const Room = () => {
           {/* Prompt */}
           <Card className="card-game text-center">
             <h2 className="text-2xl font-bold mb-4">
-              {gameMode === 'who-wrote-this' ? 'Who Wrote This?' : 
-               gameMode === 'caption-cascade' ? 'Caption Cascade' : 
-               gameMode === 'instant-trivia' ? 'Instant Trivia' :
-               'Two Truths and a Bot'}
+              {gameMode === 'who-wrote-this' ? t('whoWroteThis') : 
+               gameMode === 'caption-cascade' ? t('captionCascade') : 
+               gameMode === 'instant-trivia' ? t('instantTrivia') :
+               t('twoTruthsBot')}
             </h2>
             {gameMode === 'instant-trivia' && currentTriviaQuestion ? (
               <div className="space-y-4">
@@ -645,9 +645,9 @@ const Room = () => {
                   </label>
                   <Textarea
                     placeholder={
-                      gameMode === 'caption-cascade' ? 'Write a funny caption...' : 
-                      gameMode === 'two-truths' ? 'Write one true fact about yourself...' :
-                      'Type your answer here...'
+                      gameMode === 'caption-cascade' ? t('placeholderCaption') : 
+                      gameMode === 'two-truths' ? t('placeholderTruth') :
+                      t('placeholderAnswer')
                     }
                     value={playerAnswer}
                     onChange={(e) => setPlayerAnswer(e.target.value.slice(0, 200))}

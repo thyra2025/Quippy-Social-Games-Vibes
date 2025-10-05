@@ -70,6 +70,10 @@ export const translations = {
     captionCascadeDesc: "Write the funniest caption for a hilarious image",
     twoTruthsBotDesc: "Guess which statement was written by AI",
     instantTriviaDesc: "Test your knowledge with quick trivia questions",
+    writeTrueStatement: "Write one true statement about yourself",
+    placeholderCaption: "Write a funny caption...",
+    placeholderTruth: "Write one true fact about yourself...",
+    placeholderAnswer: "Type your answer here...",
   },
   es: {
     startGame: "Comenzar Juego",
@@ -137,6 +141,10 @@ export const translations = {
     captionCascadeDesc: "Escribe el título más divertido para una imagen graciosa",
     twoTruthsBotDesc: "Adivina qué declaración fue escrita por IA",
     instantTriviaDesc: "Pon a prueba tus conocimientos con preguntas rápidas",
+    writeTrueStatement: "Escribe una declaración verdadera sobre ti",
+    placeholderCaption: "Escribe un título gracioso...",
+    placeholderTruth: "Escribe un hecho verdadero sobre ti...",
+    placeholderAnswer: "Escribe tu respuesta aquí...",
   },
   fr: {
     startGame: "Commencer le Jeu",
@@ -204,6 +212,10 @@ export const translations = {
     captionCascadeDesc: "Écrivez la légende la plus drôle pour une image hilarante",
     twoTruthsBotDesc: "Devinez quelle déclaration a été écrite par IA",
     instantTriviaDesc: "Testez vos connaissances avec des questions rapides",
+    writeTrueStatement: "Écrivez une déclaration vraie sur vous",
+    placeholderCaption: "Écrivez une légende drôle...",
+    placeholderTruth: "Écrivez un fait vrai sur vous...",
+    placeholderAnswer: "Tapez votre réponse ici...",
   },
   pt: {
     startGame: "Começar Jogo",
@@ -271,6 +283,10 @@ export const translations = {
     captionCascadeDesc: "Escreva a legenda mais engraçada para uma imagem hilária",
     twoTruthsBotDesc: "Adivinhe qual declaração foi escrita por IA",
     instantTriviaDesc: "Teste seu conhecimento com perguntas rápidas",
+    writeTrueStatement: "Escreva uma declaração verdadeira sobre você",
+    placeholderCaption: "Escreva uma legenda engraçada...",
+    placeholderTruth: "Escreva um fato verdadeiro sobre você...",
+    placeholderAnswer: "Digite sua resposta aqui...",
   },
   pidgin: {
     startGame: "Start di Game",
@@ -338,6 +354,10 @@ export const translations = {
     captionCascadeDesc: "Write funny caption for picture",
     twoTruthsBotDesc: "Guess which talk na AI write",
     instantTriviaDesc: "Answer quick questions show say you sabi",
+    writeTrueStatement: "Write one true talk about yourself",
+    placeholderCaption: "Write funny caption...",
+    placeholderTruth: "Write one true thing about you...",
+    placeholderAnswer: "Put your answer here...",
   },
 };
 
