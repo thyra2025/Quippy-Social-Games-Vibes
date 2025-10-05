@@ -210,8 +210,8 @@ const Room = () => {
     setPlayerAnswer('');
     
     toast({
-      title: "Submitted!",
-      description: "Waiting for other players...",
+      title: t('submitted'),
+      description: t('waiting'),
     });
 
     const totalPlayers = 1 + simulatedPlayers.length;
@@ -239,8 +239,8 @@ const Room = () => {
     setTriviaAnswers(prev => [...prev, triviaAnswer]);
     
     toast({
-      title: "Answer submitted!",
-      description: "Waiting for other players...",
+      title: t('submitted'),
+      description: t('waiting'),
     });
 
     const totalPlayers = 1 + simulatedPlayers.length;

@@ -7,6 +7,7 @@ export const translations = {
   en: {
     startGame: "Start Game",
     joinParty: "Join Party",
+    submitted: "Submitted!",
     submitAnswer: "Submit Answer",
     submitCaption: "Submit Caption",
     submitStatement: "Submit Statement",
@@ -82,6 +83,7 @@ export const translations = {
   es: {
     startGame: "Comenzar Juego",
     joinParty: "Unirse a la Fiesta",
+    submitted: "¡Enviado!",
     submitAnswer: "Enviar Respuesta",
     submitCaption: "Enviar Título",
     submitStatement: "Enviar Declaración",
@@ -157,6 +159,7 @@ export const translations = {
   fr: {
     startGame: "Commencer le Jeu",
     joinParty: "Rejoindre la Fête",
+    submitted: "Soumis!",
     submitAnswer: "Soumettre une Réponse",
     submitCaption: "Soumettre une Légende",
     submitStatement: "Soumettre une Déclaration",
@@ -232,6 +235,7 @@ export const translations = {
   pt: {
     startGame: "Começar Jogo",
     joinParty: "Entrar na Festa",
+    submitted: "Enviado!",
     submitAnswer: "Enviar Resposta",
     submitCaption: "Enviar Legenda",
     submitStatement: "Enviar Declaração",
@@ -307,6 +311,7 @@ export const translations = {
   pidgin: {
     startGame: "Start di Game",
     joinParty: "Join di Party",
+    submitted: "E Don Send!",
     submitAnswer: "Send Your Answer",
     submitCaption: "Write Wetin You See",
     submitStatement: "Talk Your Own",
