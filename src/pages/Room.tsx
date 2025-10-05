@@ -692,16 +692,12 @@ const Room = () => {
   // Voting Phase
   if (gamePhase === 'voting') {
     let votingPrompt = '';
-    let votingInstruction = '';
     if (gameMode === 'who-wrote-this') {
-      votingPrompt = 'Vote for the Best Answer!';
-      votingInstruction = 'Which one did you like the most?';
+      votingPrompt = t('voteForBestAnswer');
     } else if (gameMode === 'caption-cascade') {
-      votingPrompt = 'Vote for the Funniest Caption!';
-      votingInstruction = 'Which one made you laugh?';
+      votingPrompt = t('voteForFunniestCaption');
     } else if (gameMode === 'two-truths') {
-      votingPrompt = 'Which statement do you think the AI wrote?';
-      votingInstruction = 'Vote for the statement you think is fake';
+      votingPrompt = t('whichStatementAIWrote');
     }
 
     return (
@@ -788,14 +784,14 @@ const Room = () => {
                         const isMySubmission = submission.playerId === currentPlayerId;
                         if (isMySubmission) {
                           switch (gameMode) {
-                            case 'caption-cascade': return 'Your Caption';
-                            case 'two-truths': return 'Your Statement';
-                            case 'who-wrote-this': return 'Your Answer';
+                            case 'caption-cascade': return t('yourCaption');
+                            case 'two-truths': return t('yourStatement');
+                            case 'who-wrote-this': return t('yourAnswer');
                           }
                         }
-                        if (hasVotedFor) return 'Voted!';
+                        if (hasVotedFor) return t('voted');
                         if (gameMode === 'two-truths') return t('voteAsFake');
-                        return 'Vote for This';
+                        return t('voteForThis');
                       })()}
                     </Button>
                   </div>
