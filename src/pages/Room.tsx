@@ -11,12 +11,13 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { toast } from '@/hooks/use-toast';
 import { Player } from '@/pages/Lobby';
 import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
-import { GameMode, Submission, Vote } from '@/types/game';
+import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer } from '@/types/game';
 import { getRandomPrompt, getAIAnswer } from '@/utils/gameModes/whoWroteThis';
 import { getRandomImage, getRandomCaption, CaptionImage } from '@/utils/gameModes/captionCascade';
 import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
+import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
 
-type GamePhase = 'lobby' | 'playing' | 'voting' | 'recap';
+type GamePhase = 'lobby' | 'playing' | 'voting' | 'reveal' | 'recap';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -33,14 +34,18 @@ const Room = () => {
   const [gamePhase, setGamePhase] = useState<GamePhase>('lobby');
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [currentImage, setCurrentImage] = useState<CaptionImage | null>(null);
+  const [currentTriviaQuestion, setCurrentTriviaQuestion] = useState<TriviaQuestion | null>(null);
   const [playerAnswer, setPlayerAnswer] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
   const [usedAnswerIndices, setUsedAnswerIndices] = useState<number[]>([]);
+  const [triviaAnswers, setTriviaAnswers] = useState<TriviaAnswer[]>([]);
+  const [selectedTriviaAnswer, setSelectedTriviaAnswer] = useState<number | null>(null);
 
-  const { seconds, start: startTimer, reset: resetTimer } = useCountdown(45, () => {
+  const timerDuration = gameMode === 'instant-trivia' ? 30 : 45;
+  const { seconds, start: startTimer, reset: resetTimer } = useCountdown(timerDuration, () => {
     if (gamePhase === 'playing') {
       handlePlayingPhaseEnd();
     }
@@ -60,6 +65,8 @@ const Room = () => {
       setCurrentImage(getRandomImage());
     } else if (gameMode === 'two-truths') {
       setCurrentPrompt('Write one true statement about yourself');
+    } else if (gameMode === 'instant-trivia') {
+      setCurrentTriviaQuestion(getRandomQuestion());
     }
     setGamePhase('playing');
     startTimer();
@@ -70,40 +77,61 @@ const Room = () => {
     if (gamePhase !== 'playing' || simulatedPlayers.length === 0) return;
 
     simulatedPlayers.forEach((player) => {
-      const delay = 15000 + Math.random() * 20000;
+      const delay = gameMode === 'instant-trivia' 
+        ? 10000 + Math.random() * 10000  // 10-20 seconds for trivia
+        : 15000 + Math.random() * 20000;
       
       const timerId = setTimeout(() => {
-        let answerText = '';
-        
-        if (gameMode === 'who-wrote-this') {
-          const { answer, index: answerIndex } = getRandomSimulatedAnswer(usedAnswerIndices);
-          setUsedAnswerIndices(prev => [...prev, answerIndex]);
-          answerText = answer;
-        } else if (gameMode === 'caption-cascade') {
-          const { caption, index: captionIndex } = getRandomCaption(usedAnswerIndices);
-          setUsedAnswerIndices(prev => [...prev, captionIndex]);
-          answerText = caption;
-        } else if (gameMode === 'two-truths') {
-          const { statement, index: statementIndex } = getRandomStatement(usedAnswerIndices);
-          setUsedAnswerIndices(prev => [...prev, statementIndex]);
-          answerText = statement;
-        }
-        
-        const submission: Submission = {
-          id: Math.random().toString(36).substring(2, 9),
-          text: answerText,
-          playerId: player.id,
-          playerName: player.name,
-          isAI: false,
-          avatarColor: player.avatarColor,
-        };
+        if (gameMode === 'instant-trivia' && currentTriviaQuestion) {
+          // Trivia mode: select an answer
+          const isCorrect = shouldSimulatedPlayerAnswerCorrectly();
+          const selectedAnswer = isCorrect 
+            ? currentTriviaQuestion.correctAnswer
+            : Math.floor(Math.random() * currentTriviaQuestion.options.length);
+          
+          const triviaAnswer: TriviaAnswer = {
+            playerId: player.id,
+            playerName: player.name,
+            selectedAnswer,
+            isCorrect: selectedAnswer === currentTriviaQuestion.correctAnswer,
+            isSimulated: true,
+          };
+          
+          setTriviaAnswers(prev => [...prev, triviaAnswer]);
+        } else {
+          // Other modes: text submission
+          let answerText = '';
+          
+          if (gameMode === 'who-wrote-this') {
+            const { answer, index: answerIndex } = getRandomSimulatedAnswer(usedAnswerIndices);
+            setUsedAnswerIndices(prev => [...prev, answerIndex]);
+            answerText = answer;
+          } else if (gameMode === 'caption-cascade') {
+            const { caption, index: captionIndex } = getRandomCaption(usedAnswerIndices);
+            setUsedAnswerIndices(prev => [...prev, captionIndex]);
+            answerText = caption;
+          } else if (gameMode === 'two-truths') {
+            const { statement, index: statementIndex } = getRandomStatement(usedAnswerIndices);
+            setUsedAnswerIndices(prev => [...prev, statementIndex]);
+            answerText = statement;
+          }
+          
+          const submission: Submission = {
+            id: Math.random().toString(36).substring(2, 9),
+            text: answerText,
+            playerId: player.id,
+            playerName: player.name,
+            isAI: false,
+            avatarColor: player.avatarColor,
+          };
 
-        setSubmissions(prev => [...prev, submission]);
+          setSubmissions(prev => [...prev, submission]);
+        }
       }, delay);
 
       return () => clearTimeout(timerId);
     });
-  }, [gamePhase, simulatedPlayers.length, gameMode]);
+  }, [gamePhase, simulatedPlayers.length, gameMode, currentTriviaQuestion]);
 
   const handleSubmitAnswer = () => {
     if (!playerAnswer.trim()) return;
@@ -134,7 +162,47 @@ const Room = () => {
     }
   };
 
+  const handleTriviaAnswer = (answerIndex: number) => {
+    if (!currentTriviaQuestion || selectedTriviaAnswer !== null) return;
+
+    setSelectedTriviaAnswer(answerIndex);
+    
+    const isCorrect = answerIndex === currentTriviaQuestion.correctAnswer;
+    const triviaAnswer: TriviaAnswer = {
+      playerId: currentPlayerId,
+      playerName: currentPlayerName,
+      selectedAnswer: answerIndex,
+      isCorrect,
+      isSimulated: false,
+    };
+
+    setTriviaAnswers(prev => [...prev, triviaAnswer]);
+    
+    toast({
+      title: "Answer submitted!",
+      description: "Waiting for other players...",
+    });
+
+    const totalPlayers = 1 + simulatedPlayers.length;
+    if (triviaAnswers.length + 1 >= totalPlayers) {
+      setTimeout(() => {
+        handlePlayingPhaseEnd();
+      }, 1000);
+    }
+  };
+
   const handlePlayingPhaseEnd = () => {
+    if (gameMode === 'instant-trivia') {
+      // For trivia, go to reveal phase instead of voting
+      resetTimer();
+      setGamePhase('reveal');
+      // Auto-advance to recap after 5 seconds
+      setTimeout(() => {
+        setGamePhase('recap');
+      }, 5000);
+      return;
+    }
+
     // Add AI submission for Who Wrote This and Two Truths modes
     if (gameMode === 'who-wrote-this') {
       const aiSubmission: Submission = {
@@ -313,6 +381,9 @@ const Room = () => {
     setHasVoted(false);
     setPlayerAnswer('');
     setUsedAnswerIndices([]);
+    setTriviaAnswers([]);
+    setSelectedTriviaAnswer(null);
+    setCurrentTriviaQuestion(null);
     startGame();
   };
 
@@ -425,7 +496,7 @@ const Room = () => {
             <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
               <div 
                 className="h-full theme-gradient transition-all duration-1000"
-                style={{ width: `${(seconds / 45) * 100}%` }}
+                style={{ width: `${(seconds / timerDuration) * 100}%` }}
               />
             </div>
           </Card>
@@ -435,11 +506,20 @@ const Room = () => {
             <h2 className="text-2xl font-bold mb-4">
               {gameMode === 'who-wrote-this' ? 'Who Wrote This?' : 
                gameMode === 'caption-cascade' ? 'Caption Cascade' : 
+               gameMode === 'instant-trivia' ? 'Instant Trivia' :
                'Two Truths and a Bot'}
             </h2>
-            <div className="inline-block px-6 py-4 rounded-xl theme-gradient">
-              <p className="text-xl font-bold text-white">{promptText}</p>
-            </div>
+            {gameMode === 'instant-trivia' && currentTriviaQuestion ? (
+              <div className="space-y-4">
+                <div className="bg-primary/10 rounded-xl p-6">
+                  <p className="text-xl font-bold">{currentTriviaQuestion.question}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="inline-block px-6 py-4 rounded-xl theme-gradient">
+                <p className="text-xl font-bold text-white">{promptText}</p>
+              </div>
+            )}
             
             {/* Show image for caption mode */}
             {gameMode === 'caption-cascade' && currentImage && (
@@ -458,7 +538,38 @@ const Room = () => {
           </Card>
 
           {/* Answer Input */}
-          {!hasSubmitted ? (
+          {gameMode === 'instant-trivia' && currentTriviaQuestion ? (
+            /* Trivia Answer Buttons */
+            <Card className="card-game">
+              <div className="grid grid-cols-1 gap-3">
+                {currentTriviaQuestion.options.map((option, index) => {
+                  const isSelected = selectedTriviaAnswer === index;
+                  const answerLabel = String.fromCharCode(65 + index); // A, B, C, D
+                  
+                  return (
+                    <Button
+                      key={index}
+                      onClick={() => handleTriviaAnswer(index)}
+                      disabled={selectedTriviaAnswer !== null}
+                      variant={isSelected ? "default" : "outline"}
+                      className={`w-full py-6 text-lg justify-start ${
+                        isSelected ? 'theme-gradient text-white font-bold' : ''
+                      }`}
+                    >
+                      <span className="mr-3 font-bold">{answerLabel}.</span>
+                      {option}
+                      {isSelected && <CheckCircle2 className="ml-auto h-5 w-5" />}
+                    </Button>
+                  );
+                })}
+              </div>
+              {selectedTriviaAnswer !== null && (
+                <p className="text-center text-muted-foreground mt-4">
+                  Answer submitted! Waiting for others...
+                </p>
+              )}
+            </Card>
+          ) : !hasSubmitted ? (
             <Card className="card-game">
               <div className="space-y-4">
                 <div>
@@ -628,6 +739,88 @@ const Room = () => {
     );
   }
 
+  // Reveal Phase (for Trivia)
+  if (gamePhase === 'reveal' && gameMode === 'instant-trivia' && currentTriviaQuestion) {
+    const correctAnswers = triviaAnswers.filter(a => a.isCorrect);
+    
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="p-4 flex justify-between items-center border-b border-border">
+          <Button variant="ghost" onClick={handleLeave}>
+            <LogOut className="h-5 w-5 mr-2" />
+            Leave Game
+          </Button>
+          <ThemeSelector />
+        </header>
+
+        <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
+          <Card className="card-game text-center">
+            <h2 className="text-2xl font-bold mb-4">Results!</h2>
+            <div className="bg-primary/10 rounded-xl p-6 mb-6">
+              <p className="text-xl font-bold mb-4">{currentTriviaQuestion.question}</p>
+            </div>
+          </Card>
+
+          {/* Answer Options with Results */}
+          <div className="grid grid-cols-1 gap-3">
+            {currentTriviaQuestion.options.map((option, index) => {
+              const isCorrect = index === currentTriviaQuestion.correctAnswer;
+              const answersForThis = triviaAnswers.filter(a => a.selectedAnswer === index);
+              const answerLabel = String.fromCharCode(65 + index); // A, B, C, D
+              
+              return (
+                <Card 
+                  key={index}
+                  className={`card-game ${
+                    isCorrect 
+                      ? 'border-green-500 border-2 bg-green-500/10' 
+                      : 'bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-lg">{answerLabel}.</span>
+                      <span className="text-lg">{option}</span>
+                      {isCorrect && (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      )}
+                    </div>
+                  </div>
+                  {answersForThis.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {answersForThis.map((answer, idx) => (
+                        <div 
+                          key={idx}
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isCorrect 
+                              ? 'bg-green-500/20 text-green-700' 
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {answer.playerName}
+                          {answer.isSimulated && <Bot className="inline h-3 w-3 ml-1" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card className="card-game text-center">
+            <p className="text-muted-foreground">
+              {correctAnswers.length === 0 
+                ? "Nobody got it right!" 
+                : `${correctAnswers.length} player${correctAnswers.length !== 1 ? 's' : ''} got it right!`
+              }
+            </p>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   // Recap Phase
   const winner = getWinner();
   const aiSubmission = submissions.find(s => s.isAI);
@@ -643,81 +836,125 @@ const Room = () => {
       </header>
 
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
-        {/* Winner */}
-        <Card className="card-game text-center">
-          <div className="inline-block p-6 rounded-full theme-gradient mb-4">
-            <Trophy className="h-12 w-12 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold mb-4">
-            {gameMode === 'caption-cascade' ? 'Funniest Caption!' : 
-             gameMode === 'two-truths' ? 'Most Believed Statement!' : 
-             'Winning Answer!'}
-          </h2>
-          <div className="bg-primary/10 rounded-xl p-6 mb-4">
-            <p className="text-xl font-semibold">{winner.submission?.text}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              {gameMode === 'two-truths' 
-                ? `Only ${winner.votes} vote${winner.votes !== 1 ? 's' : ''} thought this was fake!`
-                : `${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`
-              }
-            </p>
-            {gameMode === 'two-truths' && winner.submission && (
-              <p className="text-primary font-semibold mt-2">
-                by {winner.submission.playerName}
-              </p>
-            )}
-          </div>
-          {winner.submission?.isAI && gameMode !== 'two-truths' && (
-            <p className="text-primary font-semibold">🤖 This was the AI answer!</p>
-          )}
-        </Card>
+        {gameMode === 'instant-trivia' && currentTriviaQuestion ? (
+          /* Trivia Recap */
+          <>
+            <Card className="card-game text-center">
+              <div className="inline-block p-6 rounded-full theme-gradient mb-4">
+                <Trophy className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4">Trivia Results!</h2>
+              <div className="bg-primary/10 rounded-xl p-6 mb-4">
+                <p className="text-lg font-semibold mb-3">{currentTriviaQuestion.question}</p>
+                <div className="flex items-center justify-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <p className="text-xl font-bold text-green-600">
+                    {currentTriviaQuestion.options[currentTriviaQuestion.correctAnswer]}
+                  </p>
+                </div>
+              </div>
+            </Card>
 
-        {/* AI Reveal for Who Wrote This and Two Truths */}
-        {(gameMode === 'who-wrote-this' || gameMode === 'two-truths') && aiSubmission && (
-          <Card className="card-game">
-            <h3 className="font-bold mb-2">
-              {gameMode === 'two-truths' ? 'AI Fake Statement Revealed:' : 'AI Answer Revealed:'}
-            </h3>
-            <div className="bg-muted rounded-xl p-4 mb-2">
-              <p className="text-lg">{aiSubmission.text}</p>
-            </div>
-            {gameMode === 'two-truths' && (
-              <p className="text-sm text-muted-foreground">
-                {winner.aiVotes || 0} player{(winner.aiVotes || 0) !== 1 ? 's' : ''} correctly guessed this was fake!
-              </p>
-            )}
-          </Card>
-        )}
+            <Card className="card-game">
+              <h3 className="font-bold mb-3">Correct Answers:</h3>
+              {triviaAnswers.filter(a => a.isCorrect).length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">Nobody got it right!</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {triviaAnswers.filter(a => a.isCorrect).map((answer, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center gap-2 bg-green-500/10 text-green-700 px-3 py-2 rounded-full"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="font-medium">{answer.playerName}</span>
+                      {answer.isSimulated && <Bot className="h-4 w-4" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </>
+        ) : (
+          /* Non-Trivia Recap */
+          <>
+            {/* Winner */}
+            <Card className="card-game text-center">
+              <div className="inline-block p-6 rounded-full theme-gradient mb-4">
+                <Trophy className="h-12 w-12 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4">
+                {gameMode === 'caption-cascade' ? 'Funniest Caption!' : 
+                 gameMode === 'two-truths' ? 'Most Believed Statement!' : 
+                 'Winning Answer!'}
+              </h2>
+              <div className="bg-primary/10 rounded-xl p-6 mb-4">
+                <p className="text-xl font-semibold">{winner.submission?.text}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {gameMode === 'two-truths' 
+                    ? `Only ${winner.votes} vote${winner.votes !== 1 ? 's' : ''} thought this was fake!`
+                    : `${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`
+                  }
+                </p>
+                {gameMode === 'two-truths' && winner.submission && (
+                  <p className="text-primary font-semibold mt-2">
+                    by {winner.submission.playerName}
+                  </p>
+                )}
+              </div>
+              {winner.submission?.isAI && gameMode !== 'two-truths' && (
+                <p className="text-primary font-semibold">🤖 This was the AI answer!</p>
+              )}
+            </Card>
 
-        {/* All Captions for Caption Cascade */}
-        {gameMode === 'caption-cascade' && currentImage && (
-          <Card className="card-game">
-            <h3 className="font-bold mb-4">All Captions</h3>
-            <div className="mb-4">
-              <img 
-                src={currentImage.url} 
-                alt={currentImage.alt}
-                className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
-                onError={(e) => {
-                  console.error('Image failed to load:', currentImage.url);
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400';
-                }}
-              />
-            </div>
-            <div className="space-y-3">
-              {submissions.map((submission) => {
-                const submissionVotes = votes.filter(v => v.submissionId === submission.id);
-                return (
-                  <div key={submission.id} className="bg-muted rounded-xl p-4">
-                    <p className="text-lg mb-2">{submission.text}</p>
-                    <p className="text-sm text-muted-foreground">
-                      by {submission.playerName} • {submissionVotes.length} vote{submissionVotes.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+            {/* AI Reveal for Who Wrote This and Two Truths */}
+            {(gameMode === 'who-wrote-this' || gameMode === 'two-truths') && aiSubmission && (
+              <Card className="card-game">
+                <h3 className="font-bold mb-2">
+                  {gameMode === 'two-truths' ? 'AI Fake Statement Revealed:' : 'AI Answer Revealed:'}
+                </h3>
+                <div className="bg-muted rounded-xl p-4 mb-2">
+                  <p className="text-lg">{aiSubmission.text}</p>
+                </div>
+                {gameMode === 'two-truths' && (
+                  <p className="text-sm text-muted-foreground">
+                    {winner.aiVotes || 0} player{(winner.aiVotes || 0) !== 1 ? 's' : ''} correctly guessed this was fake!
+                  </p>
+                )}
+              </Card>
+            )}
+
+            {/* All Captions for Caption Cascade */}
+            {gameMode === 'caption-cascade' && currentImage && (
+              <Card className="card-game">
+                <h3 className="font-bold mb-4">All Captions</h3>
+                <div className="mb-4">
+                  <img 
+                    src={currentImage.url} 
+                    alt={currentImage.alt}
+                    className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
+                    onError={(e) => {
+                      console.error('Image failed to load:', currentImage.url);
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400';
+                    }}
+                  />
+                </div>
+                <div className="space-y-3">
+                  {submissions.map((submission) => {
+                    const submissionVotes = votes.filter(v => v.submissionId === submission.id);
+                    return (
+                      <div key={submission.id} className="bg-muted rounded-xl p-4">
+                        <p className="text-lg mb-2">{submission.text}</p>
+                        <p className="text-sm text-muted-foreground">
+                          by {submission.playerName} • {submissionVotes.length} vote{submissionVotes.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Actions */}
@@ -737,7 +974,9 @@ const Room = () => {
               </div>
               <WhatsAppShareButton
                 text={
-                  gameMode === 'caption-cascade'
+                  gameMode === 'instant-trivia' && currentTriviaQuestion
+                    ? `⚡ Instant Trivia Results! ⚡\n\nQuestion: ${currentTriviaQuestion.question}\nCorrect: ${currentTriviaQuestion.options[currentTriviaQuestion.correctAnswer]}\n\n${triviaAnswers.filter(a => a.isCorrect).length} player${triviaAnswers.filter(a => a.isCorrect).length !== 1 ? 's' : ''} got it right!\n\nWant to play? ${roomLink}`
+                    : gameMode === 'caption-cascade'
                     ? `🎉 Caption Cascade Results! 🎉\n\nWinning Caption: "${winner.submission?.text}"\nby ${winner.submission?.playerName}\n\n${winner.votes} vote${winner.votes !== 1 ? 's' : ''}!\n\nWant to play? ${roomLink}`
                     : gameMode === 'two-truths'
                     ? `🎉 Two Truths and a Bot Results! 🎉\n\nMost Believed: "${winner.submission?.text}"\nby ${winner.submission?.playerName}\n\nAI Fake: "${aiSubmission?.text}"\n${winner.aiVotes || 0} guessed correctly!\n\nWant to play? ${roomLink}`
