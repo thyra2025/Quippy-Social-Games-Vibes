@@ -30,14 +30,6 @@ const Lobby = () => {
   const [enableSimulated, setEnableSimulated] = useState(false);
 
   useEffect(() => {
-    // Simulate initial host
-    if (!hasJoined && players.length === 0) {
-      const hostId = Math.random().toString(36).substring(2, 9);
-      setPlayers([{ id: hostId, name: 'Host', isHost: true }]);
-    }
-  }, []);
-
-  useEffect(() => {
     if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {
       const simulatedPlayers = generateSimulatedPlayers();
       setPlayers(prev => [...prev, ...simulatedPlayers]);
