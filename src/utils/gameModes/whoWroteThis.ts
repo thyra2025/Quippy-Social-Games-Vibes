@@ -353,6 +353,14 @@ export const SIMULATED_ANSWERS_BY_LANGUAGE: Record<Language, Record<string, stri
 };
 
 export function getRandomPrompt(language: Language = 'en'): string {
+  // START: content selection debug
+  console.log('=== CONTENT SELECTION DEBUG ===');
+  console.log('Selected language from UI:', localStorage.getItem('userLanguage'));
+  console.log('Selected language from state:', language);
+  console.log('Available prompt arrays:', Object.keys(PROMPTS_BY_LANGUAGE || {}));
+  console.log('About to select from array for language:', language);
+  console.log('================================');
+
   console.log('🌐 getRandomPrompt called with language:', language);
   console.log('🌐 Available languages in PROMPTS_BY_LANGUAGE:', Object.keys(PROMPTS_BY_LANGUAGE));
   console.log('🌐 Prompts available for', language, ':', PROMPTS_BY_LANGUAGE[language]?.length || 0, 'prompts');
@@ -362,17 +370,31 @@ export function getRandomPrompt(language: Language = 'en'): string {
     console.error('❌ No prompts found for language:', language, '- falling back to English');
     const englishPrompts = PROMPTS_BY_LANGUAGE.en;
     const selectedPrompt = englishPrompts[Math.floor(Math.random() * englishPrompts.length)];
+    // AFTER SELECTION DEBUG
+    console.log('Selected prompt:', selectedPrompt);
+    console.log('Prompt came from language:', 'en');
     console.log('📝 Selected prompt (English fallback):', selectedPrompt);
     return selectedPrompt;
   }
   
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  // AFTER SELECTION DEBUG
+  console.log('Selected prompt:', selectedPrompt);
+  console.log('Prompt came from language:', language);
   console.log('📝 Selected prompt:', selectedPrompt);
   console.log('✅ Language match confirmed - prompt is in', language);
   return selectedPrompt;
 }
 
 export function getAIAnswer(prompt: string, language: Language = 'en'): string {
+  // START: content selection debug
+  console.log('=== CONTENT SELECTION DEBUG ===');
+  console.log('Selected language from UI:', localStorage.getItem('userLanguage'));
+  console.log('Selected language from state:', language);
+  console.log('Available prompt arrays:', Object.keys(PROMPTS_BY_LANGUAGE || {}));
+  console.log('About to select from array for language:', language);
+  console.log('================================');
+
   console.log('🤖 getAIAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
   console.log('🤖 Available languages in AI_ANSWERS:', Object.keys(AI_ANSWERS_BY_LANGUAGE));
   
@@ -381,6 +403,9 @@ export function getAIAnswer(prompt: string, language: Language = 'en'): string {
     console.error('❌ No AI answers dictionary found for language:', language);
     const englishAnswers = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
     const selected = englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected AI answer:', selected);
+    console.log('AI answer came from language:', 'en');
     console.log('⚠️ Falling back to English AI answer:', selected.substring(0, 50));
     return selected;
   }
@@ -392,17 +417,31 @@ export function getAIAnswer(prompt: string, language: Language = 'en'): string {
     console.warn('⚠️ No answers found for prompt in', language);
     const englishAnswers = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
     const selected = englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected AI answer:', selected);
+    console.log('AI answer came from language:', 'en');
     console.log('⚠️ Falling back to English AI answer:', selected.substring(0, 50));
     return selected;
   }
   
   const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
+  // AFTER SELECTION DEBUG
+  console.log('Selected AI answer:', selectedAnswer);
+  console.log('AI answer came from language:', language);
   console.log('✅ Selected AI answer:', selectedAnswer.substring(0, 50));
   console.log('✅ Language match confirmed - AI answer is in', language);
   return selectedAnswer;
 }
 
 export function getSimulatedAnswer(prompt: string, language: Language = 'en'): string {
+  // START: content selection debug
+  console.log('=== CONTENT SELECTION DEBUG ===');
+  console.log('Selected language from UI:', localStorage.getItem('userLanguage'));
+  console.log('Selected language from state:', language);
+  console.log('Available prompt arrays:', Object.keys(PROMPTS_BY_LANGUAGE || {}));
+  console.log('About to select from array for language:', language);
+  console.log('================================');
+
   console.log('🎭 getSimulatedAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
   const languageAnswers = SIMULATED_ANSWERS_BY_LANGUAGE[language] || SIMULATED_ANSWERS_BY_LANGUAGE.en;
   let answers = languageAnswers[prompt] || [];
@@ -410,6 +449,9 @@ export function getSimulatedAnswer(prompt: string, language: Language = 'en'): s
   // Prefer simulated answers for the SAME prompt in the SAME language
   if (answers.length > 0) {
     const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected simulated answer:', selectedAnswer);
+    console.log('Simulated answer came from language:', language);
     console.log('✅ Selected simulated answer:', selectedAnswer.substring(0, 50));
     return selectedAnswer;
   }
@@ -418,6 +460,9 @@ export function getSimulatedAnswer(prompt: string, language: Language = 'en'): s
   const aiSameLang = AI_ANSWERS_BY_LANGUAGE[language]?.[prompt] || [];
   if (aiSameLang.length > 0) {
     const selected = aiSameLang[Math.floor(Math.random() * aiSameLang.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected AI answer for simulated:', selected);
+    console.log('AI answer (for simulated) came from language:', language);
     console.log('↩️ Falling back to AI answers in same language for simulated:', selected.substring(0, 50));
     return selected;
   }
@@ -426,6 +471,9 @@ export function getSimulatedAnswer(prompt: string, language: Language = 'en'): s
   const englishSim = SIMULATED_ANSWERS_BY_LANGUAGE.en[prompt] || [];
   if (englishSim.length > 0) {
     const selected = englishSim[Math.floor(Math.random() * englishSim.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected English simulated answer for simulated:', selected);
+    console.log('Simulated answer came from language:', 'en');
     console.log('⚠️ No simulated answers in', language, '- falling back to English simulated:', selected.substring(0, 50));
     return selected;
   }
@@ -434,6 +482,9 @@ export function getSimulatedAnswer(prompt: string, language: Language = 'en'): s
   const aiEnglish = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
   if (aiEnglish.length > 0) {
     const selected = aiEnglish[Math.floor(Math.random() * aiEnglish.length)] || '';
+    // AFTER SELECTION DEBUG
+    console.log('Selected English AI answer for simulated:', selected);
+    console.log('AI answer (for simulated) came from language:', 'en');
     console.log('↩️ Falling back to English AI answers for simulated:', selected.substring(0, 50));
     return selected;
   }
