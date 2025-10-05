@@ -521,7 +521,7 @@ const Room = () => {
               <div className="inline-block px-6 py-2 rounded-xl theme-gradient">
                 <p className="text-xl font-bold text-white">Room: {roomId}</p>
               </div>
-              <p className="text-sm text-muted-foreground">Starting game...</p>
+              <p className="text-sm text-muted-foreground">{t('startingGame')}</p>
             </div>
           </Card>
         </main>
