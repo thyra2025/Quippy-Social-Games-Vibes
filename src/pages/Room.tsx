@@ -59,12 +59,109 @@ const Room = () => {
     }
   });
 
+  // Helper function to update game phase via Edge Function
+  const updateGamePhase = async (newPhase: GamePhase, prompt?: string) => {
+    const secretToken = localStorage.getItem(`room_token_${roomId}`);
+    
+    // Only host can update phase (has secret token)
+    if (!secretToken) {
+      console.log('⚠️ Non-host attempted phase change, will sync via realtime');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-room', {
+        body: {
+          action: 'update-phase',
+          roomId,
+          newPhase,
+          secretToken,
+          currentPrompt: prompt,
+        }
+      });
+
+      if (error) throw error;
+      
+      console.log('✅ Phase update requested:', newPhase);
+      // Local state will be updated via real-time subscription
+    } catch (error) {
+      console.error('Error updating phase via Edge Function:', error);
+      // Fallback to local state if Edge Function fails
+      setGamePhase(newPhase);
+      if (prompt) setCurrentPrompt(prompt);
+    }
+  };
+
   useEffect(() => {
     if (gamePhase === 'lobby') {
       const timer = setTimeout(() => startGame(), 2000);
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Real-time subscription for game phase synchronization
+  useEffect(() => {
+    if (!roomId) return;
+
+    let channel: RealtimeChannel;
+
+    const fetchRoomState = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('rooms')
+          .select('game_phase, current_prompt')
+          .eq('id', roomId)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          // Sync initial state from database
+          if (data.game_phase && data.game_phase !== gamePhase) {
+            setGamePhase(data.game_phase as GamePhase);
+          }
+          if (data.current_prompt && data.current_prompt !== currentPrompt) {
+            setCurrentPrompt(data.current_prompt);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching room state:', error);
+      }
+    };
+
+    fetchRoomState();
+
+    // Set up real-time subscription for phase changes
+    channel = supabase
+      .channel(`room:${roomId}:phase`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log('🔄 Room state updated:', payload.new);
+          const newData = payload.new;
+          
+          if (newData.game_phase && newData.game_phase !== gamePhase) {
+            console.log(`📍 Phase sync: ${gamePhase} → ${newData.game_phase}`);
+            setGamePhase(newData.game_phase as GamePhase);
+          }
+          
+          if (newData.current_prompt && newData.current_prompt !== currentPrompt) {
+            setCurrentPrompt(newData.current_prompt);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId]);
 
   // Fetch submissions from database and set up real-time subscription
   useEffect(() => {
@@ -277,20 +374,24 @@ const Room = () => {
     console.log('🎮 localStorage userLanguage:', localStorage.getItem('userLanguage'));
     console.log('🎮 Language context value:', language);
     
+    let newPrompt = '';
     if (gameMode === 'who-wrote-this') {
       console.log('🎮 Calling getRandomPrompt with language:', language);
-      const prompt = getRandomPrompt(language);
-      console.log('🎮 Received prompt:', prompt);
-      setCurrentPrompt(prompt);
+      newPrompt = getRandomPrompt(language);
+      console.log('🎮 Received prompt:', newPrompt);
+      setCurrentPrompt(newPrompt);
     } else if (gameMode === 'caption-cascade') {
       setCurrentImage(getRandomImage());
     } else if (gameMode === 'two-truths') {
-      setCurrentPrompt(t('writeTrueStatement'));
+      newPrompt = t('writeTrueStatement');
+      setCurrentPrompt(newPrompt);
     } else if (gameMode === 'instant-trivia') {
       console.log('🎮 Calling getRandomQuestion with language:', language);
       setCurrentTriviaQuestion(getRandomQuestion(language));
     }
-    setGamePhase('playing');
+    
+    // Update phase via Edge Function (host only)
+    updateGamePhase('playing', newPrompt || undefined);
     startTimer();
   };
 
@@ -432,10 +533,10 @@ const Room = () => {
     if (gameMode === 'instant-trivia') {
       // For trivia, go to reveal phase instead of voting
       resetTimer();
-      setGamePhase('reveal');
+      await updateGamePhase('reveal');
       // Auto-advance to recap after 5 seconds
-      setTimeout(() => {
-        setGamePhase('recap');
+      setTimeout(async () => {
+        await updateGamePhase('recap');
       }, 5000);
       return;
     }
@@ -485,12 +586,12 @@ const Room = () => {
     }
 
     // Shuffle submissions locally (will be synced from database)
-    setTimeout(() => {
+    setTimeout(async () => {
       setSubmissions(prev => [...prev].sort(() => Math.random() - 0.5));
     }, 500);
 
     resetTimer();
-    setGamePhase('voting');
+    await updateGamePhase('voting');
   };
 
   // Simulated players auto-vote
@@ -592,8 +693,8 @@ const Room = () => {
 
     if (currentVoteCount >= totalPlayers) {
       console.log('✨ All votes collected! Advancing to recap...');
-      setTimeout(() => {
-        setGamePhase('recap');
+      setTimeout(async () => {
+        await updateGamePhase('recap');
       }, 1500);
     }
   }, [votes.length, gamePhase, simulatedPlayers.length]);
@@ -640,7 +741,7 @@ const Room = () => {
     }
   };
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = async () => {
     setSubmissions([]);
     setVotes([]);
     setHasSubmitted(false);
@@ -650,7 +751,11 @@ const Room = () => {
     setTriviaAnswers([]);
     setSelectedTriviaAnswer(null);
     setCurrentTriviaQuestion(null);
-    startGame();
+    
+    // Small delay to ensure state is cleared
+    setTimeout(() => {
+      startGame();
+    }, 100);
   };
 
   const handleLeave = () => {

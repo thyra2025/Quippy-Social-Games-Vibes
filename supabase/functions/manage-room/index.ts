@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { action, roomId, secretToken, updates } = await req.json();
+    const { action, roomId, secretToken, updates, newPhase, currentPrompt } = await req.json();
 
     console.log('Manage room request:', { action, roomId, hasToken: !!secretToken });
 
@@ -48,7 +48,53 @@ Deno.serve(async (req) => {
     console.log('Token verified successfully for room:', roomId);
 
     // Handle different actions
-    if (action === 'update') {
+    if (action === 'update-phase') {
+      // Dedicated action for phase updates (faster, clearer intent)
+      if (!newPhase) {
+        return new Response(
+          JSON.stringify({ error: 'newPhase is required for update-phase action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Validate phase value
+      const validPhases = ['lobby', 'playing', 'voting', 'reveal', 'recap'];
+      if (!validPhases.includes(newPhase)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid phase value. Must be one of: lobby, playing, voting, reveal, recap' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Update game phase in database
+      const updateData: any = { game_phase: newPhase };
+      if (currentPrompt !== undefined) {
+        updateData.current_prompt = currentPrompt;
+      }
+
+      const { data, error: updateError } = await supabase
+        .from('rooms')
+        .update(updateData)
+        .eq('id', roomId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Error updating phase:', updateError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to update phase' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`✅ Phase updated to ${newPhase} for room ${roomId}`);
+      
+      return new Response(
+        JSON.stringify({ success: true, newPhase, data }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } else if (action === 'update') {
       if (!updates) {
         return new Response(
           JSON.stringify({ error: 'Updates object is required for update action' }),
@@ -116,7 +162,7 @@ Deno.serve(async (req) => {
 
     } else {
       return new Response(
-        JSON.stringify({ error: 'Invalid action. Supported actions: update, delete' }),
+        JSON.stringify({ error: 'Invalid action. Supported actions: update-phase, update, delete' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
