@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Users, Crown, LogOut, Play, Bot, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ export interface Player {
 const Lobby = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const [playerName, setPlayerName] = useState('');
   const [hasJoined, setHasJoined] = useState(false);
@@ -33,6 +34,23 @@ const Lobby = () => {
   const [currentPlayerId, setCurrentPlayerId] = useState('');
   const [enableSimulated, setEnableSimulated] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GameMode>('who-wrote-this');
+
+  // Auto-join for room creators
+  useEffect(() => {
+    const state = location.state as { autoJoin?: boolean; player?: Player };
+    if (state?.autoJoin && state?.player && !hasJoined) {
+      setPlayers([state.player]);
+      setCurrentPlayerId(state.player.id);
+      setHasJoined(true);
+      toast({
+        title: t('roomCreated'),
+        description: `${t('welcomeToParty')}, ${state.player.name}!`,
+      });
+      
+      // Clear navigation state to prevent re-entry on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, []);
 
   useEffect(() => {
     if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {

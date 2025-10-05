@@ -8,20 +8,51 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { Card } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const Landing = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [roomCode, setRoomCode] = useState('');
   const [roomError, setRoomError] = useState('');
+  const [showHostDialog, setShowHostDialog] = useState(false);
+  const [hostName, setHostName] = useState('');
 
   const generateRoomId = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
   const handleStartParty = () => {
-    const roomId = generateRoomId();
-    navigate(`/lobby/${roomId}`);
+    setShowHostDialog(true);
+  };
+
+  const handleCreateRoom = () => {
+    if (hostName.trim()) {
+      const roomId = generateRoomId();
+      const playerId = Math.random().toString(36).substring(2, 9);
+      
+      // Create host player object
+      const hostPlayer = {
+        id: playerId,
+        name: hostName.trim(),
+        isHost: true,
+        isSimulated: false,
+      };
+      
+      // Navigate to lobby with host info
+      navigate(`/lobby/${roomId}`, { 
+        state: { 
+          autoJoin: true,
+          player: hostPlayer
+        } 
+      });
+    }
   };
 
   const handleJoinParty = () => {
@@ -154,6 +185,35 @@ const Landing = () => {
       <footer className="p-4 text-center text-sm text-muted-foreground border-t border-border">
         <p>{t('shareTheFun')}</p>
       </footer>
+
+      {/* Host Name Dialog */}
+      <Dialog open={showHostDialog} onOpenChange={setShowHostDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('startParty')}</DialogTitle>
+            <DialogDescription>
+              {t('enterName')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder={t('playerName')}
+              value={hostName}
+              onChange={(e) => setHostName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleCreateRoom()}
+              className="h-12 text-lg"
+              autoFocus
+            />
+            <Button
+              onClick={handleCreateRoom}
+              disabled={!hostName.trim()}
+              className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
+            >
+              {t('createRoom')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
