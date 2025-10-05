@@ -540,7 +540,7 @@ const Room = () => {
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
           <Card className="card-game text-center">
             <h2 className="text-2xl font-bold mb-2">{votingPrompt}</h2>
-            <p className="text-muted-foreground">Which one did you like the most?</p>
+            <p className="text-muted-foreground">{votingInstruction}</p>
             {gameMode === 'caption-cascade' && currentImage && (
               <div className="mt-4">
                 <img 
