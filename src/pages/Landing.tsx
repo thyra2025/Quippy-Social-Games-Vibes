@@ -52,10 +52,10 @@ const Landing = () => {
               <Sparkles className="h-16 w-16 text-white" />
             </div>
             <h2 className="text-5xl md:text-6xl font-bold tracking-tight">
-              Welcome to Quippy
+              {t('welcomeToQuippy')}
             </h2>
             <p className="text-xl text-muted-foreground">
-              The party game that brings everyone together through WhatsApp!
+              {t('tagline')}
             </p>
           </div>
 
@@ -70,7 +70,7 @@ const Landing = () => {
                 <div>
                   <h3 className="text-2xl font-bold mb-2">{t('startParty')}</h3>
                   <p className="text-muted-foreground">
-                    Create a new room and invite your friends via WhatsApp
+                    {t('createRoomDesc')}
                   </p>
                 </div>
                 <Button className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl">
@@ -88,7 +88,7 @@ const Landing = () => {
                 <div>
                   <h3 className="text-2xl font-bold mb-2">{t('joinAParty')}</h3>
                   <p className="text-muted-foreground">
-                    Enter a room code to join your friends
+                    {t('enterRoomDesc')}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -117,15 +117,15 @@ const Landing = () => {
           <div className="grid grid-cols-3 gap-4 pt-8">
             <div className="space-y-2">
               <div className="text-3xl">🎮</div>
-              <div className="text-sm font-medium">Quick Games</div>
+              <div className="text-sm font-medium">{t('quickGames')}</div>
             </div>
             <div className="space-y-2">
               <div className="text-3xl">💬</div>
-              <div className="text-sm font-medium">WhatsApp First</div>
+              <div className="text-sm font-medium">{t('whatsappFirst')}</div>
             </div>
             <div className="space-y-2">
               <div className="text-3xl">🎨</div>
-              <div className="text-sm font-medium">Custom Themes</div>
+              <div className="text-sm font-medium">{t('customThemes')}</div>
             </div>
           </div>
         </div>
@@ -133,7 +133,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="p-4 text-center text-sm text-muted-foreground border-t border-border">
-        <p>Share the fun with your friends on WhatsApp! 🚀</p>
+        <p>{t('shareTheFun')}</p>
       </footer>
     </div>
   );

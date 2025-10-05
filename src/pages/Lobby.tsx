@@ -39,14 +39,14 @@ const Lobby = () => {
       const simulatedPlayers = generateSimulatedPlayers();
       setPlayers(prev => [...prev, ...simulatedPlayers]);
       toast({
-        title: "Simulated players added!",
-        description: `${simulatedPlayers.length} AI players joined the party`,
+        title: t('simulatedPlayersAdded'),
+        description: `${simulatedPlayers.length} ${t('aiPlayersJoined')}`,
       });
     } else if (hasJoined && !enableSimulated && players.some(p => p.isSimulated)) {
       setPlayers(prev => prev.filter(p => !p.isSimulated));
       toast({
-        title: "Simulated players removed",
-        description: "Real players only now",
+        title: t('simulatedPlayersRemoved'),
+        description: t('realPlayersOnly'),
       });
     }
   }, [enableSimulated, hasJoined]);
@@ -64,8 +64,8 @@ const Lobby = () => {
       setCurrentPlayerId(playerId);
       setHasJoined(true);
       toast({
-        title: "Joined!",
-        description: `Welcome to the party, ${playerName}!`,
+        title: t('joined'),
+        description: `${t('welcomeToParty')}, ${playerName}!`,
       });
     }
   };
@@ -100,8 +100,8 @@ const Lobby = () => {
         <main className="flex-1 flex items-center justify-center p-6">
           <Card className="card-game max-w-md w-full space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Join the Party!</h2>
-              <p className="text-muted-foreground">Room Code</p>
+              <h2 className="text-3xl font-bold">{t('joinTheParty')}</h2>
+              <p className="text-muted-foreground">{t('roomCode')}</p>
               <div className="inline-block px-8 py-4 rounded-xl theme-gradient">
                 <p className="text-4xl font-bold text-white tracking-wider">{roomId}</p>
               </div>
@@ -177,7 +177,7 @@ const Lobby = () => {
             <div className="space-y-4">
               <div>
                 <Label className="text-base font-semibold">{t('selectGameMode')}</Label>
-                <p className="text-sm text-muted-foreground">Choose how you want to play</p>
+                <p className="text-sm text-muted-foreground">{t('chooseGameMode')}</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {GAME_MODES.map((mode) => (
@@ -212,7 +212,7 @@ const Lobby = () => {
                 {t('addSimulated')}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Test the game solo with AI players
+                {t('testWithBots')}
               </p>
             </div>
             <Switch
@@ -267,18 +267,18 @@ const Lobby = () => {
                       {player.isSimulated && (
                         <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Bot className="h-3 w-3" />
-                          BOT
+                          {t('bot')}
                         </span>
                       )}
                       {player.id === currentPlayerId && (
-                        <span className="text-xs text-muted-foreground">(You)</span>
+                        <span className="text-xs text-muted-foreground">{t('you')}</span>
                       )}
                     </div>
                   </div>
                   {player.isHost && (
                     <div className="flex items-center gap-1 text-amber-500">
                       <Crown className="h-4 w-4" />
-                      <span className="text-xs font-medium">Host</span>
+                      <span className="text-xs font-medium">{t('host')}</span>
                     </div>
                   )}
                 </div>
@@ -287,7 +287,7 @@ const Lobby = () => {
 
             {players.length < 2 && (
               <p className="text-center text-sm text-muted-foreground">
-                Waiting for more players to join...
+                {t('waitingForPlayers')}
               </p>
             )}
           </div>
