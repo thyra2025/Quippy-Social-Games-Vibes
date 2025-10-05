@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Users, Crown, LogOut, Play, Bot, History } from 'lucide-react';
+import { Users, Crown, LogOut, Play, Bot, History, PartyPopper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -34,10 +34,13 @@ const Lobby = () => {
   const [currentPlayerId, setCurrentPlayerId] = useState('');
   const [enableSimulated, setEnableSimulated] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GameMode>('who-wrote-this');
+  const [roomExpired, setRoomExpired] = useState(false);
 
-  // Auto-join for room creators
+  // Check if room exists (for shared links) and auto-join for room creators
   useEffect(() => {
     const state = location.state as { autoJoin?: boolean; player?: Player };
+    
+    // If arriving via room creation, auto-join
     if (state?.autoJoin && state?.player && !hasJoined) {
       setPlayers([state.player]);
       setCurrentPlayerId(state.player.id);
@@ -49,6 +52,15 @@ const Lobby = () => {
       
       // Clear navigation state to prevent re-entry on refresh
       navigate(location.pathname, { replace: true, state: {} });
+      return;
+    }
+    
+    // If arriving via shared link (no autoJoin state), check if room exists
+    if (!state?.autoJoin && roomId) {
+      const roomExists = localStorage.getItem(`partybot:${roomId}`) !== null;
+      if (!roomExists) {
+        setRoomExpired(true);
+      }
     }
   }, []);
 
@@ -100,6 +112,42 @@ const Lobby = () => {
   const shareMessage = `🎉 Join my Quippy party!\nRoom Code: ${roomId}`;
 
   const isHost = players.find(p => p.id === currentPlayerId)?.isHost;
+
+  // Show friendly message for expired rooms (shared links)
+  if (roomExpired) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="p-4 flex justify-between items-center border-b border-border">
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
+            <ThemeSelector />
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center p-6">
+          <Card className="card-game max-w-md w-full space-y-6 text-center">
+            <div className="inline-block p-6 rounded-full theme-gradient mx-auto">
+              <PartyPopper className="h-16 w-16 text-white" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold">{t('partyEnded')}</h2>
+              <p className="text-muted-foreground">
+                {t('roomCode')}: <span className="font-mono font-bold">{roomId}</span>
+              </p>
+            </div>
+
+            <Button
+              onClick={() => navigate('/')}
+              className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
+            >
+              {t('startNewParty')}
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   if (!hasJoined) {
     return (
