@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -23,6 +25,8 @@ const Landing = () => {
   const [roomError, setRoomError] = useState('');
   const [showHostDialog, setShowHostDialog] = useState(false);
   const [hostName, setHostName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   const generateRoomId = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -32,11 +36,26 @@ const Landing = () => {
     setShowHostDialog(true);
   };
 
-  const handleCreateRoom = () => {
-    if (hostName.trim()) {
+  const handleCreateRoom = async () => {
+    if (!hostName.trim()) return;
+    
+    setIsCreating(true);
+    try {
       const roomId = generateRoomId();
-      const playerId = Math.random().toString(36).substring(2, 9);
+      const playerId = crypto.randomUUID();
       
+      // Create room in Supabase
+      const { error: roomError } = await supabase
+        .from('rooms')
+        .insert({
+          id: roomId,
+          host_id: playerId,
+          game_phase: 'lobby',
+          mode: 'who-wrote-this',
+        });
+
+      if (roomError) throw roomError;
+
       // Create host player object
       const hostPlayer = {
         id: playerId,
@@ -52,24 +71,46 @@ const Landing = () => {
           player: hostPlayer
         } 
       });
+    } catch (error) {
+      console.error('Error creating room:', error);
+      toast({
+        title: t('error'),
+        description: 'Failed to create room. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  const handleJoinParty = () => {
+  const handleJoinParty = async () => {
     const trimmedCode = roomCode.trim().toUpperCase();
     
     if (!trimmedCode) {
       return;
     }
 
-    // Check if room exists in localStorage
-    const roomExists = localStorage.getItem(`partybot:${trimmedCode}`) !== null;
-    
-    if (roomExists) {
-      setRoomError('');
-      navigate(`/lobby/${trimmedCode}`);
-    } else {
+    setIsJoining(true);
+    setRoomError('');
+
+    try {
+      // Check if room exists in Supabase
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('id', trimmedCode)
+        .single();
+
+      if (error || !data) {
+        setRoomError(t('roomNotFound'));
+      } else {
+        navigate(`/lobby/${trimmedCode}`);
+      }
+    } catch (error) {
+      console.error('Error checking room:', error);
       setRoomError(t('roomNotFound'));
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -152,11 +193,11 @@ const Landing = () => {
                   )}
                   <Button 
                     onClick={handleJoinParty}
-                    disabled={!roomCode.trim()}
+                    disabled={!roomCode.trim() || isJoining}
                     variant="outline"
                     className="w-full py-6 text-lg rounded-xl"
                   >
-                    {t('join')}
+                    {isJoining ? t('joining') : t('join')}
                   </Button>
                 </div>
               </div>
@@ -206,10 +247,10 @@ const Landing = () => {
             />
             <Button
               onClick={handleCreateRoom}
-              disabled={!hostName.trim()}
+              disabled={!hostName.trim() || isCreating}
               className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
             >
-              {t('createRoom')}
+              {isCreating ? t('creating') : t('createRoom')}
             </Button>
           </div>
         </DialogContent>

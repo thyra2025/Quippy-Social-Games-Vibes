@@ -92,6 +92,9 @@ export const translations = {
     votesThoughtFake: "Only {count} vote thought this was fake!",
     aiFakeStatementRevealed: "AI Fake Statement Revealed:",
     playersGuessedCorrectly: "{count} player correctly guessed this was fake!",
+    error: "Error",
+    joining: "Joining...",
+    creating: "Creating...",
   },
   es: {
     startGame: "Comenzar Juego",
@@ -181,6 +184,9 @@ export const translations = {
     votesThoughtFake: "¡Solo {count} voto pensó que esto era falso!",
     aiFakeStatementRevealed: "Declaración Falsa de IA Revelada:",
     playersGuessedCorrectly: "¡{count} jugador adivinó correctamente que era falso!",
+    error: "Error",
+    joining: "Uniéndose...",
+    creating: "Creando...",
   },
   fr: {
     startGame: "Commencer le Jeu",
@@ -270,6 +276,9 @@ export const translations = {
     votesThoughtFake: "Seulement {count} vote pensait que c'était faux!",
     aiFakeStatementRevealed: "Fausse Déclaration IA Révélée:",
     playersGuessedCorrectly: "{count} joueur a correctement deviné que c'était faux!",
+    error: "Erreur",
+    joining: "Rejoignant...",
+    creating: "Création...",
   },
   pt: {
     startGame: "Começar Jogo",
@@ -359,6 +368,9 @@ export const translations = {
     votesThoughtFake: "Apenas {count} voto achou que era falso!",
     aiFakeStatementRevealed: "Declaração Falsa da IA Revelada:",
     playersGuessedCorrectly: "{count} jogador adivinhou corretamente que era falso!",
+    error: "Erro",
+    joining: "Entrando...",
+    creating: "Criando...",
   },
   pidgin: {
     startGame: "Start di Game",
@@ -448,6 +460,9 @@ export const translations = {
     votesThoughtFake: "Only {count} person vote say na fake!",
     aiFakeStatementRevealed: "Na This One AI Write:",
     playersGuessedCorrectly: "{count} person guess am correct!",
+    error: "Wahala",
+    joining: "Dey Join...",
+    creating: "Dey Create...",
   },
 };
 

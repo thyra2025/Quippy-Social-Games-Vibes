@@ -14,6 +14,8 @@ import { generateRoomLink } from '@/utils/whatsapp';
 import { toast } from '@/hooks/use-toast';
 import { generateSimulatedPlayers } from '@/utils/simulatedPlayers';
 import { GAME_MODES, GameMode } from '@/types/game';
+import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Player {
   id: string;
@@ -35,68 +37,231 @@ const Lobby = () => {
   const [enableSimulated, setEnableSimulated] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GameMode>('who-wrote-this');
   const [roomExpired, setRoomExpired] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isJoining, setIsJoining] = useState(false);
 
   // Check if room exists (for shared links) and auto-join for room creators
   useEffect(() => {
-    const state = location.state as { autoJoin?: boolean; player?: Player };
-    
-    // If arriving via room creation, auto-join
-    if (state?.autoJoin && state?.player && !hasJoined) {
-      setPlayers([state.player]);
-      setCurrentPlayerId(state.player.id);
-      setHasJoined(true);
-      toast({
-        title: t('roomCreated'),
-        description: `${t('welcomeToParty')}, ${state.player.name}!`,
-      });
+    const checkRoomAndAutoJoin = async () => {
+      const state = location.state as { autoJoin?: boolean; player?: Player };
       
-      // Clear navigation state to prevent re-entry on refresh
-      navigate(location.pathname, { replace: true, state: {} });
-      return;
-    }
-    
-    // If arriving via shared link (no autoJoin state), check if room exists
-    if (!state?.autoJoin && roomId) {
-      const roomExists = localStorage.getItem(`partybot:${roomId}`) !== null;
-      if (!roomExists) {
-        setRoomExpired(true);
+      // If arriving via room creation, auto-join
+      if (state?.autoJoin && state?.player && !hasJoined) {
+        try {
+          // Add host player to database
+          const { error: playerError } = await supabase
+            .from('players')
+            .insert({
+              id: state.player.id,
+              room_id: roomId,
+              name: state.player.name,
+              is_host: true,
+              is_simulated: false,
+              color: 'linear-gradient(135deg, hsl(var(--theme-primary)), hsl(var(--theme-secondary)))',
+            });
+
+          if (playerError) throw playerError;
+
+          setPlayers([state.player]);
+          setCurrentPlayerId(state.player.id);
+          setHasJoined(true);
+          toast({
+            title: t('roomCreated'),
+            description: `${t('welcomeToParty')}, ${state.player.name}!`,
+          });
+          
+          // Clear navigation state to prevent re-entry on refresh
+          navigate(location.pathname, { replace: true, state: {} });
+        } catch (error) {
+          console.error('Error adding host player:', error);
+          toast({
+            title: t('error'),
+            description: 'Failed to join room',
+            variant: 'destructive',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        return;
       }
-    }
+      
+      // If arriving via shared link (no autoJoin state), check if room exists
+      if (!state?.autoJoin && roomId) {
+        try {
+          const { data, error } = await supabase
+            .from('rooms')
+            .select('id')
+            .eq('id', roomId)
+            .single();
+
+          if (error || !data) {
+            setRoomExpired(true);
+          }
+        } catch (error) {
+          console.error('Error checking room:', error);
+          setRoomExpired(true);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoomAndAutoJoin();
   }, []);
 
+  // Fetch players from database and set up real-time subscription
   useEffect(() => {
-    if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {
-      const simulatedPlayers = generateSimulatedPlayers();
-      setPlayers(prev => [...prev, ...simulatedPlayers]);
-      toast({
-        title: t('simulatedPlayersAdded'),
-        description: `${simulatedPlayers.length} ${t('aiPlayersJoined')}`,
-      });
-    } else if (hasJoined && !enableSimulated && players.some(p => p.isSimulated)) {
-      setPlayers(prev => prev.filter(p => !p.isSimulated));
-      toast({
-        title: t('simulatedPlayersRemoved'),
-        description: t('realPlayersOnly'),
-      });
-    }
+    if (!roomId || !hasJoined) return;
+
+    let channel: RealtimeChannel;
+
+    const fetchPlayers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('players')
+          .select('*')
+          .eq('room_id', roomId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const formattedPlayers: Player[] = data.map(p => ({
+            id: p.id,
+            name: p.name,
+            isHost: p.is_host,
+            isSimulated: p.is_simulated,
+            avatarColor: p.color || undefined,
+          }));
+          setPlayers(formattedPlayers);
+        }
+      } catch (error) {
+        console.error('Error fetching players:', error);
+      }
+    };
+
+    fetchPlayers();
+
+    // Set up real-time subscription
+    channel = supabase
+      .channel(`room:${roomId}:players`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'players',
+          filter: `room_id=eq.${roomId}`,
+        },
+        () => {
+          fetchPlayers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId, hasJoined]);
+
+  // Handle simulated players toggle
+  useEffect(() => {
+    const handleSimulatedPlayers = async () => {
+      if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {
+        const simulatedPlayers = generateSimulatedPlayers();
+        
+        try {
+          // Add simulated players to database
+          const playersToInsert = simulatedPlayers.map(p => ({
+            id: p.id,
+            room_id: roomId,
+            name: p.name,
+            is_host: false,
+            is_simulated: true,
+            color: p.avatarColor,
+          }));
+
+          const { error } = await supabase
+            .from('players')
+            .insert(playersToInsert);
+
+          if (error) throw error;
+
+          toast({
+            title: t('simulatedPlayersAdded'),
+            description: `${simulatedPlayers.length} ${t('aiPlayersJoined')}`,
+          });
+        } catch (error) {
+          console.error('Error adding simulated players:', error);
+          toast({
+            title: t('error'),
+            description: 'Failed to add simulated players',
+            variant: 'destructive',
+          });
+        }
+      } else if (hasJoined && !enableSimulated && players.some(p => p.isSimulated)) {
+        try {
+          // Remove simulated players from database
+          const simulatedPlayerIds = players.filter(p => p.isSimulated).map(p => p.id);
+          const { error } = await supabase
+            .from('players')
+            .delete()
+            .in('id', simulatedPlayerIds);
+
+          if (error) throw error;
+
+          toast({
+            title: t('simulatedPlayersRemoved'),
+            description: t('realPlayersOnly'),
+          });
+        } catch (error) {
+          console.error('Error removing simulated players:', error);
+        }
+      }
+    };
+
+    handleSimulatedPlayers();
   }, [enableSimulated, hasJoined]);
 
-  const handleJoinLobby = () => {
-    if (playerName.trim()) {
-      const playerId = Math.random().toString(36).substring(2, 9);
-      const newPlayer: Player = {
-        id: playerId,
-        name: playerName,
-        isHost: players.length === 0,
-        isSimulated: false,
-      };
-      setPlayers([...players, newPlayer]);
+  const handleJoinLobby = async () => {
+    if (!playerName.trim()) return;
+
+    setIsJoining(true);
+    try {
+      const playerId = crypto.randomUUID();
+      const avatarColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+
+      // Add player to database
+      const { error: playerError } = await supabase
+        .from('players')
+        .insert({
+          id: playerId,
+          room_id: roomId,
+          name: playerName.trim(),
+          is_host: players.length === 0,
+          is_simulated: false,
+          color: avatarColor,
+        });
+
+      if (playerError) throw playerError;
+
       setCurrentPlayerId(playerId);
       setHasJoined(true);
       toast({
         title: t('joined'),
         description: `${t('welcomeToParty')}, ${playerName}!`,
       });
+    } catch (error) {
+      console.error('Error joining lobby:', error);
+      toast({
+        title: t('error'),
+        description: 'Failed to join lobby',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -112,6 +277,19 @@ const Lobby = () => {
   const shareMessage = `🎉 Join my Quippy party!\nRoom Code: ${roomId}`;
 
   const isHost = players.find(p => p.id === currentPlayerId)?.isHost;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="inline-block p-6 rounded-full theme-gradient">
+            <PartyPopper className="h-16 w-16 text-white animate-pulse" />
+          </div>
+          <p className="text-lg text-muted-foreground">{t('waiting')}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show friendly message for expired rooms (shared links)
   if (roomExpired) {
@@ -187,10 +365,10 @@ const Lobby = () => {
 
               <Button 
                 onClick={handleJoinLobby}
-                disabled={!playerName.trim()}
+                disabled={!playerName.trim() || isJoining}
                 className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
               >
-                {t('joinParty')}
+                {isJoining ? t('joining') : t('joinParty')}
               </Button>
             </div>
           </Card>
