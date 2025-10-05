@@ -1,4 +1,4 @@
-export type GameMode = 'who-wrote-this' | 'caption-cascade' | 'two-truths' | 'instant-trivia';
+export type GameMode = 'who-wrote-this' | 'caption-cascade';
 
 export interface GameModeConfig {
   id: GameMode;
@@ -19,18 +19,6 @@ export const GAME_MODES: GameModeConfig[] = [
     name: 'Caption Cascade',
     description: 'Write the funniest caption for a hilarious image',
     icon: '📸',
-  },
-  {
-    id: 'two-truths',
-    name: 'Two Truths and a Bot',
-    description: 'Guess which statement was written by AI',
-    icon: '🤖',
-  },
-  {
-    id: 'instant-trivia',
-    name: 'Instant Trivia',
-    description: 'Answer trivia questions and rack up points',
-    icon: '🧠',
   },
 ];
 

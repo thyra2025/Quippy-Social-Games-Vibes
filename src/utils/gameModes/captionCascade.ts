@@ -1,44 +1,24 @@
-import catLaptop from '@/assets/caption-cat-laptop.jpg';
-import dogSunglasses from '@/assets/caption-dog-sunglasses.jpg';
-import surprisedFace from '@/assets/caption-surprised-face.jpg';
-
 export interface CaptionImage {
-  id: string;
-  src: string;
+  url: string;
   alt: string;
 }
 
 export const CAPTION_IMAGES: CaptionImage[] = [
   {
-    id: 'cat-laptop',
-    src: catLaptop,
-    alt: 'A confused cat looking at a laptop',
-  },
-  {
-    id: 'dog-sunglasses',
-    src: dogSunglasses,
-    alt: 'A dog wearing sunglasses',
-  },
-  {
-    id: 'surprised-face',
-    src: surprisedFace,
-    alt: 'A person making an exaggerated surprised face',
-  },
+    url: 'https://via.placeholder.com/400x300/FF69B4/FFFFFF?text=Funny+Image',
+    alt: 'A funny meme image'
+  }
 ];
 
 export const SIMULATED_CAPTIONS = [
   "When you realize it's Monday",
   "My face when they say 'quick meeting'",
   "POV: You just remembered what you forgot",
-  "Me pretending to understand the presentation",
+  "Me pretending to understand",
   "That feeling when the WiFi dies",
-  "When someone says 'we need to talk'",
-  "My brain at 3am solving problems",
+  "My brain at 3am",
   "When the code finally works",
-  "Me avoiding responsibilities like",
-  "When you see your ex in public",
-  "My last brain cell working overtime",
-  "When they ask if I'm okay",
+  "Me avoiding responsibilities",
 ];
 
 export function getRandomImage(): CaptionImage {
