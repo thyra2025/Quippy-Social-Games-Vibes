@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MessageCircle, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { shareOnWhatsApp, copyToClipboard, isWhatsAppAvailable } from '@/utils/whatsapp';
+import { generateWhatsAppShareUrl, copyToClipboard } from '@/utils/whatsapp';
 import { toast } from '@/hooks/use-toast';
 
 interface WhatsAppShareButtonProps {
@@ -18,15 +18,6 @@ export const WhatsAppShareButton = ({
   showCopyFallback = true 
 }: WhatsAppShareButtonProps) => {
   const [copied, setCopied] = useState(false);
-  const hasWhatsApp = isWhatsAppAvailable();
-
-  const handleShare = () => {
-    shareOnWhatsApp(text, url);
-    toast({
-      title: "Opening WhatsApp",
-      description: "Share with your friends!",
-    });
-  };
 
   const handleCopy = async () => {
     const fullText = url ? `${text} ${url}` : text;
@@ -44,13 +35,15 @@ export const WhatsAppShareButton = ({
 
   return (
     <div className={`flex gap-2 ${className}`}>
-      <Button 
-        onClick={handleShare}
-        className="btn-whatsapp flex-1 gap-2"
+      <a
+        href={generateWhatsAppShareUrl(text, url)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-whatsapp flex-1 gap-2 inline-flex items-center justify-center rounded-lg px-4 py-2 font-medium transition-colors"
       >
         <MessageCircle className="h-5 w-5" />
         Share on WhatsApp
-      </Button>
+      </a>
       
       {showCopyFallback && (
         <Button

@@ -17,11 +17,6 @@ export const generateWhatsAppShareUrl = (text: string, url?: string): string => 
   return `https://wa.me/?text=${encodedMessage}`;
 };
 
-export const shareOnWhatsApp = (text: string, url?: string) => {
-  const whatsappUrl = generateWhatsAppShareUrl(text, url);
-  window.open(whatsappUrl, '_blank');
-};
-
 export const copyToClipboard = async (text: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(text);
