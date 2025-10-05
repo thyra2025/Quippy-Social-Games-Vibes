@@ -131,7 +131,7 @@ const Room = () => {
     } else if (gameMode === 'two-truths') {
       setCurrentPrompt('Write one true statement about yourself');
     } else if (gameMode === 'instant-trivia') {
-      setCurrentTriviaQuestion(getRandomQuestion());
+      setCurrentTriviaQuestion(getRandomQuestion(language));
     }
     setGamePhase('playing');
     startTimer();
