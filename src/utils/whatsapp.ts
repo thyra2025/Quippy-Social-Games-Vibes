@@ -6,14 +6,6 @@ export const generateRoomLink = (roomId: string): string => {
 export const generateWhatsAppShareUrl = (text: string, url?: string): string => {
   const message = url ? `${text} ${url}` : text;
   const encodedMessage = encodeURIComponent(message);
-  
-  // Check if on mobile for app link vs web link
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  
-  if (isMobile) {
-    return `whatsapp://send?text=${encodedMessage}`;
-  }
-  
   return `https://wa.me/?text=${encodedMessage}`;
 };
 
