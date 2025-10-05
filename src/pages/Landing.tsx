@@ -160,6 +160,16 @@ const Landing = () => {
             </p>
           </div>
 
+          {/* How to Play Instructions */}
+          <div className="text-center space-y-2 pt-4">
+            <h3 className="text-sm font-semibold text-muted-foreground">{t('howToPlay')}</h3>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>{t('step1')}</p>
+              <p>{t('step2')}</p>
+              <p>{t('step3')}</p>
+            </div>
+          </div>
+
           {/* Action Cards */}
           <div className="grid md:grid-cols-2 gap-4 pt-8">
             {/* Start Party Card */}

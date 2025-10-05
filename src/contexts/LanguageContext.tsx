@@ -95,6 +95,10 @@ export const translations = {
     error: "Error",
     joining: "Joining...",
     creating: "Creating...",
+    howToPlay: "How to Play",
+    step1: "1. Create or join a room",
+    step2: "2. Share the link with friends via WhatsApp",
+    step3: "3. Play together in real-time - no app needed!",
   },
   es: {
     startGame: "Comenzar Juego",
@@ -187,6 +191,10 @@ export const translations = {
     error: "Error",
     joining: "Uniéndose...",
     creating: "Creando...",
+    howToPlay: "Cómo Jugar",
+    step1: "1. Crea o únete a una sala",
+    step2: "2. Comparte el enlace con amigos por WhatsApp",
+    step3: "3. Jueguen juntos en tiempo real - ¡sin app!",
   },
   fr: {
     startGame: "Commencer le Jeu",
@@ -279,6 +287,10 @@ export const translations = {
     error: "Erreur",
     joining: "Rejoignant...",
     creating: "Création...",
+    howToPlay: "Comment Jouer",
+    step1: "1. Créez ou rejoignez une salle",
+    step2: "2. Partagez le lien avec des amis via WhatsApp",
+    step3: "3. Jouez ensemble en temps réel - aucune app requise!",
   },
   pt: {
     startGame: "Começar Jogo",
@@ -371,6 +383,10 @@ export const translations = {
     error: "Erro",
     joining: "Entrando...",
     creating: "Criando...",
+    howToPlay: "Como Jogar",
+    step1: "1. Crie ou entre em uma sala",
+    step2: "2. Compartilhe o link com amigos via WhatsApp",
+    step3: "3. Joguem juntos em tempo real - sem app!",
   },
   pidgin: {
     startGame: "Start di Game",
@@ -463,6 +479,10 @@ export const translations = {
     error: "Wahala",
     joining: "Dey Join...",
     creating: "Dey Create...",
+    howToPlay: "How to Play",
+    step1: "1. Make room or join room",
+    step2: "2. Share di link for WhatsApp",
+    step3: "3. Play together - no need to download app!",
   },
 };
 
