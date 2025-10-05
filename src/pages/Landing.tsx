@@ -13,6 +13,7 @@ const Landing = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [roomCode, setRoomCode] = useState('');
+  const [roomError, setRoomError] = useState('');
 
   const generateRoomId = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -24,8 +25,20 @@ const Landing = () => {
   };
 
   const handleJoinParty = () => {
-    if (roomCode.trim()) {
-      navigate(`/lobby/${roomCode.toUpperCase()}`);
+    const trimmedCode = roomCode.trim().toUpperCase();
+    
+    if (!trimmedCode) {
+      return;
+    }
+
+    // Check if room exists in localStorage
+    const roomExists = localStorage.getItem(`partybot:${trimmedCode}`) !== null;
+    
+    if (roomExists) {
+      setRoomError('');
+      navigate(`/lobby/${trimmedCode}`);
+    } else {
+      setRoomError(t('roomNotFound'));
     }
   };
 
@@ -95,11 +108,17 @@ const Landing = () => {
                   <Input
                     placeholder={t('enterRoomCode')}
                     value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                    onChange={(e) => {
+                      setRoomCode(e.target.value.toUpperCase());
+                      setRoomError('');
+                    }}
                     onKeyPress={(e) => e.key === 'Enter' && handleJoinParty()}
-                    className="text-center text-2xl font-bold tracking-wider h-14"
+                    className={`text-center text-2xl font-bold tracking-wider h-14 ${roomError ? 'border-destructive' : ''}`}
                     maxLength={6}
                   />
+                  {roomError && (
+                    <p className="text-sm text-destructive text-center">{roomError}</p>
+                  )}
                   <Button 
                     onClick={handleJoinParty}
                     disabled={!roomCode.trim()}
