@@ -1,57 +1,111 @@
-const AI_STATEMENTS = [
-  "I once met a celebrity at a coffee shop",
-  "I can speak three languages fluently",
-  "I've visited 15 different countries",
-  "I was on a game show once",
-  "I collect vintage postcards",
-  "I've run a marathon",
-  "I've broken the same bone twice",
-  "I can recite the alphabet backwards",
-  "I've met someone famous at the airport",
-  "I have a scar from a childhood adventure",
-  "I once won a local competition",
-  "I'm related to someone semi-famous",
-  "I've been to four different countries",
-  "I can play two instruments",
-  "I've appeared in a commercial",
-  "I once shook hands with a politician",
-];
+export type Language = 'en' | 'es' | 'fr' | 'pt' | 'pidgin';
 
-const SIMULATED_STATEMENTS = [
-  "I'm allergic to cats",
-  "I've never broken a bone",
-  "I can't whistle",
-  "I sleep with socks on",
-  "I talk to my plants",
-  "I've watched the same movie 20+ times",
-  "I can't swim",
-  "I hate the smell of coffee",
-  "I'm afraid of the dark",
-  "I've never eaten sushi",
-  "I can touch my nose with my tongue",
-  "I've read the same book 5 times",
-  "I don't like chocolate",
-  "I've never watched Star Wars",
-  "I collect bottle caps",
-  "I can't ride a bike",
-  "I've met all my cousins only once",
-  "I sleep with a night light",
-];
+const AI_STATEMENTS_BY_LANGUAGE: Record<Language, string[]> = {
+  en: [
+    "I once met a celebrity at a coffee shop",
+    "I can speak three languages fluently",
+    "I've visited 15 different countries",
+    "I was on a game show once",
+    "I collect vintage postcards",
+    "I've run a marathon",
+    "I've broken the same bone twice",
+    "I can recite the alphabet backwards",
+    "I've met someone famous at the airport",
+    "I have a scar from a childhood adventure",
+    "I once won a local competition",
+    "I'm related to someone semi-famous",
+    "I've been to four different countries",
+    "I can play two instruments",
+    "I've appeared in a commercial",
+    "I once shook hands with a politician",
+  ],
+  es: [
+    "He conocido a una celebridad en un aeropuerto",
+    "Puedo hablar tres idiomas con fluidez",
+    "He visitado cuatro países diferentes",
+    "Una vez gané una competencia local",
+    "Puedo tocar dos instrumentos"
+  ],
+  fr: [
+    "J'ai rencontré une célébrité dans un aéroport",
+    "Je parle couramment trois langues",
+    "J'ai visité quatre pays différents",
+    "J'ai gagné un concours local",
+    "Je joue de deux instruments"
+  ],
+  pt: [
+    "Conheci uma celebridade no aeroporto",
+    "Falo três idiomas fluentemente",
+    "Visitei quatro países diferentes",
+    "Já ganhei uma competição local",
+    "Toco dois instrumentos"
+  ],
+  pidgin: [
+    "I don meet celebrity for airport",
+    "I fit speak three language well well",
+    "I don visit four different country",
+    "I win competition for my area before",
+    "I fit play two instrument"
+  ]
+};
 
-export function getRandomAIStatement(): string {
-  return AI_STATEMENTS[Math.floor(Math.random() * AI_STATEMENTS.length)];
+const SIMULATED_STATEMENTS_BY_LANGUAGE: Record<Language, string[]> = {
+  en: [
+    "I'm allergic to cats",
+    "I've never broken a bone",
+    "I can't whistle",
+    "I sleep with socks on",
+    "I talk to my plants",
+    "I've watched the same movie 20+ times",
+    "I can't swim",
+    "I hate the smell of coffee",
+    "I'm afraid of the dark",
+    "I've never eaten sushi",
+    "I can touch my nose with my tongue",
+    "I've read the same book 5 times",
+    "I don't like chocolate",
+    "I've never watched Star Wars",
+    "I collect bottle caps",
+    "I can't ride a bike",
+    "I've met all my cousins only once",
+    "I sleep with a night light",
+  ],
+  es: [
+    "Tengo miedo a la oscuridad",
+    "Nunca he comido sushi",
+    "No me gusta el chocolate",
+    "Nunca he visto Star Wars",
+    "No sé andar en bicicleta"
+  ],
+  fr: [
+    "J'ai peur du noir",
+    "Je n'ai jamais mangé de sushi",
+    "Je n'aime pas le chocolat",
+    "Je n'ai jamais vu Star Wars",
+    "Je ne sais pas faire du vélo"
+  ],
+  pt: [
+    "Tenho medo do escuro",
+    "Nunca comi sushi",
+    "Não gosto de chocolate",
+    "Nunca vi Star Wars",
+    "Não sei andar de bicicleta"
+  ],
+  pidgin: [
+    "I dey fear darkness",
+    "I never chop sushi before",
+    "I no like chocolate",
+    "I never watch Star Wars",
+    "I no fit ride bicycle"
+  ]
+};
+
+export function getRandomAIStatement(language: Language = 'en'): string {
+  const statements = AI_STATEMENTS_BY_LANGUAGE[language] || AI_STATEMENTS_BY_LANGUAGE.en;
+  return statements[Math.floor(Math.random() * statements.length)];
 }
 
-export function getRandomStatement(usedIndices: number[]): { statement: string; index: number } {
-  const availableIndices = SIMULATED_STATEMENTS.map((_, i) => i).filter(
-    i => !usedIndices.includes(i)
-  );
-  
-  if (availableIndices.length === 0) {
-    const index = Math.floor(Math.random() * SIMULATED_STATEMENTS.length);
-    return { statement: SIMULATED_STATEMENTS[index], index };
-  }
-  
-  const randomIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-  return { statement: SIMULATED_STATEMENTS[randomIndex], index: randomIndex };
+export function getRandomStatement(language: Language = 'en'): string {
+  const statements = SIMULATED_STATEMENTS_BY_LANGUAGE[language] || SIMULATED_STATEMENTS_BY_LANGUAGE.en;
+  return statements[Math.floor(Math.random() * statements.length)];
 }

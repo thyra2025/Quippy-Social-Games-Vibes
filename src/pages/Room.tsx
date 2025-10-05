@@ -172,9 +172,7 @@ const Room = () => {
           } else if (gameMode === 'caption-cascade') {
             answerText = getRandomCaption(language);
           } else if (gameMode === 'two-truths') {
-            const { statement, index: statementIndex } = getRandomStatement(usedAnswerIndices);
-            setUsedAnswerIndices(prev => [...prev, statementIndex]);
-            answerText = statement;
+            answerText = getRandomStatement(language);
           }
           
           const submission: Submission = {
@@ -281,7 +279,7 @@ const Room = () => {
     } else if (gameMode === 'two-truths') {
       const aiSubmission: Submission = {
         id: 'ai-' + Math.random().toString(36).substring(2, 9),
-        text: getRandomAIStatement(),
+        text: getRandomAIStatement(language),
         playerId: 'ai',
         playerName: 'AI',
         isAI: true
