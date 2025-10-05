@@ -388,6 +388,10 @@ const Room = () => {
                   src={currentImage.url} 
                   alt={currentImage.alt}
                   className="max-w-full max-h-96 mx-auto rounded-xl shadow-lg"
+                  onError={(e) => {
+                    console.error('Image failed to load:', currentImage.url);
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400';
+                  }}
                 />
               </div>
             )}
@@ -455,15 +459,20 @@ const Room = () => {
         <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
           <Card className="card-game text-center">
             <h2 className="text-2xl font-bold mb-2">{votingPrompt}</h2>
-            <p className="text-muted-foreground">
-              {gameMode === 'caption-cascade' && currentImage && (
+            <p className="text-muted-foreground">Which one did you like the most?</p>
+            {gameMode === 'caption-cascade' && currentImage && (
+              <div className="mt-4">
                 <img 
                   src={currentImage.url} 
                   alt={currentImage.alt}
-                  className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg mt-4"
+                  className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
+                  onError={(e) => {
+                    console.error('Image failed to load:', currentImage.url);
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400';
+                  }}
                 />
-              )}
-            </p>
+              </div>
+            )}
           </Card>
 
           <div className="grid gap-4">
@@ -579,6 +588,10 @@ const Room = () => {
                 src={currentImage.url} 
                 alt={currentImage.alt}
                 className="max-w-full max-h-64 mx-auto rounded-xl shadow-lg"
+                onError={(e) => {
+                  console.error('Image failed to load:', currentImage.url);
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400';
+                }}
               />
             </div>
             <div className="space-y-3">
