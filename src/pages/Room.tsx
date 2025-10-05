@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { LogOut, Trophy, MessageCircle, Clock, Send } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { LogOut, Trophy, MessageCircle, Clock, Send, Bot, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,8 @@ import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { generateRoomLink } from '@/utils/whatsapp';
 import { useCountdown } from '@/hooks/useCountdown';
 import { toast } from '@/hooks/use-toast';
+import { Player } from '@/pages/Lobby';
+import { SIMULATED_ANSWERS, getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
 
 type GamePhase = 'lobby' | 'playing' | 'voting' | 'recap';
 
@@ -18,11 +20,14 @@ interface Submission {
   playerId: string;
   playerName: string;
   isAI: boolean;
+  avatarColor?: string;
 }
 
 interface Vote {
   voterId: string;
+  voterName: string;
   submissionId: string;
+  isSimulated?: boolean;
 }
 
 const PROMPTS = [
@@ -44,6 +49,7 @@ const AI_ANSWERS = [
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [gamePhase, setGamePhase] = useState<GamePhase>('lobby');
   const [currentPrompt, setCurrentPrompt] = useState('');
@@ -52,8 +58,14 @@ const Room = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
-  const [currentPlayerId] = useState(() => Math.random().toString(36).substring(2, 9));
-  const [currentPlayerName] = useState('Player'); // Would come from lobby in real implementation
+  const [usedAnswerIndices, setUsedAnswerIndices] = useState<number[]>([]);
+  
+  // Get players from lobby or use defaults
+  const players = (location.state?.players as Player[]) || [];
+  const currentPlayerId = location.state?.currentPlayerId || Math.random().toString(36).substring(2, 9);
+  const currentPlayer = players.find(p => p.id === currentPlayerId);
+  const currentPlayerName = currentPlayer?.name || 'Player';
+  const simulatedPlayers = players.filter(p => p.isSimulated);
 
   const { seconds, start: startTimer, reset: resetTimer } = useCountdown(45, () => {
     if (gamePhase === 'playing') {
@@ -76,6 +88,33 @@ const Room = () => {
     startTimer();
   };
 
+  // Simulated players auto-submit answers
+  useEffect(() => {
+    if (gamePhase !== 'playing' || simulatedPlayers.length === 0) return;
+
+    simulatedPlayers.forEach((player, index) => {
+      const delay = 15000 + Math.random() * 20000; // 15-35 seconds
+      
+      const timerId = setTimeout(() => {
+        const { answer, index: answerIndex } = getRandomSimulatedAnswer(usedAnswerIndices);
+        setUsedAnswerIndices(prev => [...prev, answerIndex]);
+        
+        const submission: Submission = {
+          id: Math.random().toString(36).substring(2, 9),
+          text: answer,
+          playerId: player.id,
+          playerName: player.name,
+          isAI: false,
+          avatarColor: player.avatarColor,
+        };
+
+        setSubmissions(prev => [...prev, submission]);
+      }, delay);
+
+      return () => clearTimeout(timerId);
+    });
+  }, [gamePhase, simulatedPlayers.length]);
+
   const handleSubmitAnswer = () => {
     if (!playerAnswer.trim()) return;
 
@@ -84,7 +123,8 @@ const Room = () => {
       text: playerAnswer,
       playerId: currentPlayerId,
       playerName: currentPlayerName,
-      isAI: false
+      isAI: false,
+      avatarColor: currentPlayer?.avatarColor,
     };
 
     setSubmissions(prev => [...prev, newSubmission]);
@@ -96,10 +136,13 @@ const Room = () => {
       description: "Waiting for other players...",
     });
 
-    // Simulate other players finishing
-    setTimeout(() => {
-      handlePlayingPhaseEnd();
-    }, 3000);
+    // Check if all players have submitted
+    const totalPlayers = 1 + simulatedPlayers.length; // Real player + simulated
+    if (submissions.length + 1 >= totalPlayers) {
+      setTimeout(() => {
+        handlePlayingPhaseEnd();
+      }, 2000);
+    }
   };
 
   const handlePlayingPhaseEnd = () => {
@@ -123,6 +166,57 @@ const Room = () => {
     setGamePhase('voting');
   };
 
+  // Simulated players auto-vote
+  useEffect(() => {
+    if (gamePhase !== 'voting' || simulatedPlayers.length === 0 || submissions.length === 0) return;
+
+    simulatedPlayers.forEach((player) => {
+      const delay = 8000 + Math.random() * 7000; // 8-15 seconds
+      
+      const timerId = setTimeout(() => {
+        // Filter out AI answers and their own submissions
+        const votableSubmissions = submissions.filter(
+          s => !s.isAI && s.playerId !== player.id
+        );
+
+        if (votableSubmissions.length === 0) return;
+
+        // Slightly favor longer/funnier answers
+        const weights = votableSubmissions.map(s => {
+          let weight = 1;
+          if (s.text.length > 50) weight += 0.3;
+          if (/cat|coffee|dog|quantum|wikipedia|tiktok/i.test(s.text)) weight += 0.4;
+          return weight;
+        });
+
+        const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+        let random = Math.random() * totalWeight;
+        let selectedIndex = 0;
+
+        for (let i = 0; i < weights.length; i++) {
+          random -= weights[i];
+          if (random <= 0) {
+            selectedIndex = i;
+            break;
+          }
+        }
+
+        const chosenSubmission = votableSubmissions[selectedIndex];
+        
+        const vote: Vote = {
+          voterId: player.id,
+          voterName: player.name,
+          submissionId: chosenSubmission.id,
+          isSimulated: true,
+        };
+
+        setVotes(prev => [...prev, vote]);
+      }, delay);
+
+      return () => clearTimeout(timerId);
+    });
+  }, [gamePhase, submissions.length, simulatedPlayers.length]);
+
   const handleVote = (submissionId: string) => {
     const submission = submissions.find(s => s.id === submissionId);
     if (submission?.playerId === currentPlayerId) {
@@ -135,7 +229,9 @@ const Room = () => {
 
     const newVote: Vote = {
       voterId: currentPlayerId,
-      submissionId
+      voterName: currentPlayerName,
+      submissionId,
+      isSimulated: false,
     };
 
     setVotes(prev => [...prev, newVote]);
@@ -146,10 +242,13 @@ const Room = () => {
       description: "Waiting for other players...",
     });
 
-    // Simulate voting end
-    setTimeout(() => {
-      setGamePhase('recap');
-    }, 2000);
+    // Check if all players have voted
+    const totalPlayers = 1 + simulatedPlayers.length;
+    if (votes.length + 1 >= totalPlayers) {
+      setTimeout(() => {
+        setGamePhase('recap');
+      }, 1500);
+    }
   };
 
   const handlePlayAgain = () => {
@@ -158,6 +257,7 @@ const Room = () => {
     setHasSubmitted(false);
     setHasVoted(false);
     setPlayerAnswer('');
+    setUsedAnswerIndices([]);
     startGame();
   };
 
@@ -317,11 +417,44 @@ const Room = () => {
             {submissions.map((submission) => {
               const isOwn = submission.playerId === currentPlayerId;
               const hasVotedFor = votes.some(v => v.submissionId === submission.id && v.voterId === currentPlayerId);
+              const submissionVotes = votes.filter(v => v.submissionId === submission.id);
+              const player = players.find(p => p.id === submission.playerId);
 
               return (
                 <Card key={submission.id} className={`card-game ${hasVotedFor ? 'border-primary border-2' : ''}`}>
                   <div className="space-y-4">
-                    <p className="text-lg">{submission.text}</p>
+                    <div className="flex items-start gap-3">
+                      {player && (
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                          style={{
+                            background: submission.avatarColor || 'linear-gradient(135deg, hsl(var(--theme-primary)), hsl(var(--theme-secondary)))'
+                          }}
+                        >
+                          {submission.playerName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <p className="text-lg flex-1">{submission.text}</p>
+                    </div>
+                    
+                    {submissionVotes.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {submissionVotes.map((vote, idx) => {
+                          const voter = players.find(p => p.id === vote.voterId);
+                          return (
+                            <div 
+                              key={idx}
+                              className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span>{vote.voterName}</span>
+                              {voter?.isSimulated && <Bot className="h-3 w-3" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
                     <Button
                       onClick={() => handleVote(submission.id)}
                       disabled={isOwn || hasVoted}

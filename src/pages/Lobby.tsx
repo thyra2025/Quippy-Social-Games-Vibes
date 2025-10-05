@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Crown, LogOut, Play } from 'lucide-react';
+import { Users, Crown, LogOut, Play, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { ThemeSelector } from '@/components/ThemeSelector';
 import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { generateRoomLink } from '@/utils/whatsapp';
 import { toast } from '@/hooks/use-toast';
+import { generateSimulatedPlayers } from '@/utils/simulatedPlayers';
 
-interface Player {
+export interface Player {
   id: string;
   name: string;
   isHost: boolean;
+  isSimulated?: boolean;
+  avatarColor?: string;
 }
 
 const Lobby = () => {
@@ -22,6 +27,7 @@ const Lobby = () => {
   const [hasJoined, setHasJoined] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerId, setCurrentPlayerId] = useState('');
+  const [enableSimulated, setEnableSimulated] = useState(false);
 
   useEffect(() => {
     // Simulate initial host
@@ -31,6 +37,23 @@ const Lobby = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {
+      const simulatedPlayers = generateSimulatedPlayers();
+      setPlayers(prev => [...prev, ...simulatedPlayers]);
+      toast({
+        title: "Simulated players added!",
+        description: `${simulatedPlayers.length} AI players joined the party`,
+      });
+    } else if (hasJoined && !enableSimulated && players.some(p => p.isSimulated)) {
+      setPlayers(prev => prev.filter(p => !p.isSimulated));
+      toast({
+        title: "Simulated players removed",
+        description: "Real players only now",
+      });
+    }
+  }, [enableSimulated, hasJoined]);
+
   const handleJoinLobby = () => {
     if (playerName.trim()) {
       const playerId = Math.random().toString(36).substring(2, 9);
@@ -38,6 +61,7 @@ const Lobby = () => {
         id: playerId,
         name: playerName,
         isHost: players.length === 0,
+        isSimulated: false,
       };
       setPlayers([...players, newPlayer]);
       setCurrentPlayerId(playerId);
@@ -50,7 +74,7 @@ const Lobby = () => {
   };
 
   const handleStartGame = () => {
-    navigate(`/room/${roomId}`);
+    navigate(`/room/${roomId}`, { state: { players, currentPlayerId } });
   };
 
   const handleLeave = () => {
@@ -136,6 +160,25 @@ const Lobby = () => {
           />
         </Card>
 
+        {/* Simulated Players Toggle */}
+        <Card className="card-game">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="simulated-mode" className="text-base font-semibold">
+                Add simulated players
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Test the game solo with AI players
+              </p>
+            </div>
+            <Switch
+              id="simulated-mode"
+              checked={enableSimulated}
+              onCheckedChange={setEnableSimulated}
+            />
+          </div>
+        </Card>
+
         {/* Players */}
         <Card className="card-game">
           <div className="space-y-4">
@@ -167,13 +210,26 @@ const Lobby = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full theme-gradient flex items-center justify-center text-white font-bold">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{
+                        background: player.avatarColor || 'linear-gradient(135deg, hsl(var(--theme-primary)), hsl(var(--theme-secondary)))'
+                      }}
+                    >
                       {player.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-medium">{player.name}</span>
-                    {player.id === currentPlayerId && (
-                      <span className="text-xs text-muted-foreground">(You)</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{player.name}</span>
+                      {player.isSimulated && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Bot className="h-3 w-3" />
+                          BOT
+                        </span>
+                      )}
+                      {player.id === currentPlayerId && (
+                        <span className="text-xs text-muted-foreground">(You)</span>
+                      )}
+                    </div>
                   </div>
                   {player.isHost && (
                     <div className="flex items-center gap-1 text-amber-500">
