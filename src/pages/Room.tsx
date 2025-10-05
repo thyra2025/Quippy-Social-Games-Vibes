@@ -959,14 +959,14 @@ const Room = () => {
               </div>
               <h2 className="text-2xl font-bold mb-4">
                 {gameMode === 'caption-cascade' ? 'Funniest Caption!' : 
-                 gameMode === 'two-truths' ? 'Most Believed Statement!' : 
+                 gameMode === 'two-truths' ? t('mostBelievedStatement') : 
                  'Winning Answer!'}
               </h2>
               <div className="bg-primary/10 rounded-xl p-6 mb-4">
                 <p className="text-xl font-semibold">{winner.submission?.text}</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   {gameMode === 'two-truths' 
-                    ? `Only ${winner.votes} vote${winner.votes !== 1 ? 's' : ''} thought this was fake!`
+                    ? t('votesThoughtFake').replace('{count}', `${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`)
                     : `${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`
                   }
                 </p>
@@ -985,14 +985,14 @@ const Room = () => {
             {(gameMode === 'who-wrote-this' || gameMode === 'two-truths') && aiSubmission && (
               <Card className="card-game">
                 <h3 className="font-bold mb-2">
-                  {gameMode === 'two-truths' ? 'AI Fake Statement Revealed:' : 'AI Answer Revealed:'}
+                  {gameMode === 'two-truths' ? t('aiFakeStatementRevealed') : 'AI Answer Revealed:'}
                 </h3>
                 <div className="bg-muted rounded-xl p-4 mb-2">
                   <p className="text-lg">{aiSubmission.text}</p>
                 </div>
                 {gameMode === 'two-truths' && (
                   <p className="text-sm text-muted-foreground">
-                    {winner.aiVotes || 0} player{(winner.aiVotes || 0) !== 1 ? 's' : ''} correctly guessed this was fake!
+                    {t('playersGuessedCorrectly').replace('{count}', `${winner.aiVotes || 0} player${(winner.aiVotes || 0) !== 1 ? 's' : ''}`)}
                   </p>
                 )}
               </Card>

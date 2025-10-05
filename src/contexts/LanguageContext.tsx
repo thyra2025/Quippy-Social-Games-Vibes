@@ -74,6 +74,10 @@ export const translations = {
     placeholderCaption: "Write a funny caption...",
     placeholderTruth: "Write one true fact about yourself...",
     placeholderAnswer: "Type your answer here...",
+    mostBelievedStatement: "Most Believed Statement!",
+    votesThoughtFake: "Only {count} vote thought this was fake!",
+    aiFakeStatementRevealed: "AI Fake Statement Revealed:",
+    playersGuessedCorrectly: "{count} player correctly guessed this was fake!",
   },
   es: {
     startGame: "Comenzar Juego",
@@ -145,6 +149,10 @@ export const translations = {
     placeholderCaption: "Escribe un título gracioso...",
     placeholderTruth: "Escribe un hecho verdadero sobre ti...",
     placeholderAnswer: "Escribe tu respuesta aquí...",
+    mostBelievedStatement: "¡Declaración Más Creída!",
+    votesThoughtFake: "¡Solo {count} voto pensó que esto era falso!",
+    aiFakeStatementRevealed: "Declaración Falsa de IA Revelada:",
+    playersGuessedCorrectly: "¡{count} jugador adivinó correctamente que era falso!",
   },
   fr: {
     startGame: "Commencer le Jeu",
@@ -216,6 +224,10 @@ export const translations = {
     placeholderCaption: "Écrivez une légende drôle...",
     placeholderTruth: "Écrivez un fait vrai sur vous...",
     placeholderAnswer: "Tapez votre réponse ici...",
+    mostBelievedStatement: "Déclaration la Plus Crue!",
+    votesThoughtFake: "Seulement {count} vote pensait que c'était faux!",
+    aiFakeStatementRevealed: "Fausse Déclaration IA Révélée:",
+    playersGuessedCorrectly: "{count} joueur a correctement deviné que c'était faux!",
   },
   pt: {
     startGame: "Começar Jogo",
@@ -287,6 +299,10 @@ export const translations = {
     placeholderCaption: "Escreva uma legenda engraçada...",
     placeholderTruth: "Escreva um fato verdadeiro sobre você...",
     placeholderAnswer: "Digite sua resposta aqui...",
+    mostBelievedStatement: "Declaração Mais Acreditada!",
+    votesThoughtFake: "Apenas {count} voto achou que era falso!",
+    aiFakeStatementRevealed: "Declaração Falsa da IA Revelada:",
+    playersGuessedCorrectly: "{count} jogador adivinhou corretamente que era falso!",
   },
   pidgin: {
     startGame: "Start di Game",
@@ -358,6 +374,10 @@ export const translations = {
     placeholderCaption: "Write funny caption...",
     placeholderTruth: "Write one true thing about you...",
     placeholderAnswer: "Put your answer here...",
+    mostBelievedStatement: "Talk Wey Everybody Believe!",
+    votesThoughtFake: "Only {count} person vote say na fake!",
+    aiFakeStatementRevealed: "Na This One AI Write:",
+    playersGuessedCorrectly: "{count} person guess am correct!",
   },
 };
 
