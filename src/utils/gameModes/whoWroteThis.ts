@@ -354,25 +354,51 @@ export const SIMULATED_ANSWERS_BY_LANGUAGE: Record<Language, Record<string, stri
 
 export function getRandomPrompt(language: Language = 'en'): string {
   console.log('🌐 getRandomPrompt called with language:', language);
-  const prompts = PROMPTS_BY_LANGUAGE[language] || PROMPTS_BY_LANGUAGE.en;
+  console.log('🌐 Available languages in PROMPTS_BY_LANGUAGE:', Object.keys(PROMPTS_BY_LANGUAGE));
+  console.log('🌐 Prompts available for', language, ':', PROMPTS_BY_LANGUAGE[language]?.length || 0, 'prompts');
+  
+  const prompts = PROMPTS_BY_LANGUAGE[language];
+  if (!prompts || prompts.length === 0) {
+    console.error('❌ No prompts found for language:', language, '- falling back to English');
+    const englishPrompts = PROMPTS_BY_LANGUAGE.en;
+    const selectedPrompt = englishPrompts[Math.floor(Math.random() * englishPrompts.length)];
+    console.log('📝 Selected prompt (English fallback):', selectedPrompt);
+    return selectedPrompt;
+  }
+  
   const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
   console.log('📝 Selected prompt:', selectedPrompt);
+  console.log('✅ Language match confirmed - prompt is in', language);
   return selectedPrompt;
 }
 
 export function getAIAnswer(prompt: string, language: Language = 'en'): string {
   console.log('🤖 getAIAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
-  const languageAnswers = AI_ANSWERS_BY_LANGUAGE[language] || AI_ANSWERS_BY_LANGUAGE.en;
-  const answers = languageAnswers[prompt] || [];
+  console.log('🤖 Available languages in AI_ANSWERS:', Object.keys(AI_ANSWERS_BY_LANGUAGE));
   
-  if (answers.length === 0 && language !== 'en') {
-    console.log('⚠️ No answers found for prompt in', language, '- falling back to English');
+  const languageAnswers = AI_ANSWERS_BY_LANGUAGE[language];
+  if (!languageAnswers) {
+    console.error('❌ No AI answers dictionary found for language:', language);
     const englishAnswers = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
-    return englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+    const selected = englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+    console.log('⚠️ Falling back to English AI answer:', selected.substring(0, 50));
+    return selected;
+  }
+  
+  const answers = languageAnswers[prompt] || [];
+  console.log('🤖 Answers found for this prompt in', language, ':', answers.length);
+  
+  if (answers.length === 0) {
+    console.warn('⚠️ No answers found for prompt in', language);
+    const englishAnswers = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
+    const selected = englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
+    console.log('⚠️ Falling back to English AI answer:', selected.substring(0, 50));
+    return selected;
   }
   
   const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
   console.log('✅ Selected AI answer:', selectedAnswer.substring(0, 50));
+  console.log('✅ Language match confirmed - AI answer is in', language);
   return selectedAnswer;
 }
 

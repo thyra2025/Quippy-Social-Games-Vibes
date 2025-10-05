@@ -125,13 +125,20 @@ const Room = () => {
 
   const startGame = () => {
     console.log('🎮 Starting game with language:', language, 'gameMode:', gameMode);
+    console.log('🎮 localStorage userLanguage:', localStorage.getItem('userLanguage'));
+    console.log('🎮 Language context value:', language);
+    
     if (gameMode === 'who-wrote-this') {
-      setCurrentPrompt(getRandomPrompt(language));
+      console.log('🎮 Calling getRandomPrompt with language:', language);
+      const prompt = getRandomPrompt(language);
+      console.log('🎮 Received prompt:', prompt);
+      setCurrentPrompt(prompt);
     } else if (gameMode === 'caption-cascade') {
       setCurrentImage(getRandomImage());
     } else if (gameMode === 'two-truths') {
       setCurrentPrompt(t('writeTrueStatement'));
     } else if (gameMode === 'instant-trivia') {
+      console.log('🎮 Calling getRandomQuestion with language:', language);
       setCurrentTriviaQuestion(getRandomQuestion(language));
     }
     setGamePhase('playing');

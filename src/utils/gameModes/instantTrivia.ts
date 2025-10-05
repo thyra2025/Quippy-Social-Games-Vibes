@@ -215,10 +215,22 @@ export const TRIVIA_QUESTIONS_BY_LANGUAGE: Record<string, TriviaQuestion[]> = {
 
 export function getRandomQuestion(language: string = 'en'): TriviaQuestion {
   console.log('❓ getRandomQuestion called with language:', language);
-  const questions = TRIVIA_QUESTIONS_BY_LANGUAGE[language] || TRIVIA_QUESTIONS_BY_LANGUAGE.en;
+  console.log('❓ Available languages in TRIVIA_QUESTIONS:', Object.keys(TRIVIA_QUESTIONS_BY_LANGUAGE));
+  
+  const questions = TRIVIA_QUESTIONS_BY_LANGUAGE[language];
+  if (!questions || questions.length === 0) {
+    console.error('❌ No trivia questions found for language:', language, '- falling back to English');
+    const englishQuestions = TRIVIA_QUESTIONS_BY_LANGUAGE.en;
+    const randomIndex = Math.floor(Math.random() * englishQuestions.length);
+    const selectedQuestion = englishQuestions[randomIndex];
+    console.log('✅ Selected question (English fallback):', selectedQuestion.question.substring(0, 50));
+    return selectedQuestion;
+  }
+  
   const randomIndex = Math.floor(Math.random() * questions.length);
   const selectedQuestion = questions[randomIndex];
   console.log('✅ Selected question:', selectedQuestion.question.substring(0, 50));
+  console.log('✅ Language match confirmed - question is in', language);
   return selectedQuestion;
 }
 

@@ -131,8 +131,19 @@ export function getRandomImage(): CaptionImage {
 
 export function getRandomCaption(language: Language = 'en'): string {
   console.log('💬 getRandomCaption called with language:', language);
-  const captions = SIMULATED_CAPTIONS_BY_LANGUAGE[language] || SIMULATED_CAPTIONS_BY_LANGUAGE.en;
+  console.log('💬 Available languages in SIMULATED_CAPTIONS:', Object.keys(SIMULATED_CAPTIONS_BY_LANGUAGE));
+  
+  const captions = SIMULATED_CAPTIONS_BY_LANGUAGE[language];
+  if (!captions || captions.length === 0) {
+    console.error('❌ No captions found for language:', language, '- falling back to English');
+    const englishCaptions = SIMULATED_CAPTIONS_BY_LANGUAGE.en;
+    const selectedCaption = englishCaptions[Math.floor(Math.random() * englishCaptions.length)];
+    console.log('✅ Selected caption (English fallback):', selectedCaption.substring(0, 50));
+    return selectedCaption;
+  }
+  
   const selectedCaption = captions[Math.floor(Math.random() * captions.length)];
   console.log('✅ Selected caption:', selectedCaption.substring(0, 50));
+  console.log('✅ Language match confirmed - caption is in', language);
   return selectedCaption;
 }

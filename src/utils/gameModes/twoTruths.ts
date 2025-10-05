@@ -102,16 +102,38 @@ const SIMULATED_STATEMENTS_BY_LANGUAGE: Record<Language, string[]> = {
 
 export function getRandomAIStatement(language: Language = 'en'): string {
   console.log('🤖 getRandomAIStatement called with language:', language);
-  const statements = AI_STATEMENTS_BY_LANGUAGE[language] || AI_STATEMENTS_BY_LANGUAGE.en;
+  console.log('🤖 Available languages in AI_STATEMENTS:', Object.keys(AI_STATEMENTS_BY_LANGUAGE));
+  
+  const statements = AI_STATEMENTS_BY_LANGUAGE[language];
+  if (!statements || statements.length === 0) {
+    console.error('❌ No AI statements found for language:', language, '- falling back to English');
+    const englishStatements = AI_STATEMENTS_BY_LANGUAGE.en;
+    const selectedStatement = englishStatements[Math.floor(Math.random() * englishStatements.length)];
+    console.log('✅ Selected AI statement (English fallback):', selectedStatement.substring(0, 50));
+    return selectedStatement;
+  }
+  
   const selectedStatement = statements[Math.floor(Math.random() * statements.length)];
   console.log('✅ Selected AI statement:', selectedStatement.substring(0, 50));
+  console.log('✅ Language match confirmed - AI statement is in', language);
   return selectedStatement;
 }
 
 export function getRandomStatement(language: Language = 'en'): string {
   console.log('🎭 getRandomStatement called with language:', language);
-  const statements = SIMULATED_STATEMENTS_BY_LANGUAGE[language] || SIMULATED_STATEMENTS_BY_LANGUAGE.en;
+  console.log('🎭 Available languages in SIMULATED_STATEMENTS:', Object.keys(SIMULATED_STATEMENTS_BY_LANGUAGE));
+  
+  const statements = SIMULATED_STATEMENTS_BY_LANGUAGE[language];
+  if (!statements || statements.length === 0) {
+    console.error('❌ No simulated statements found for language:', language, '- falling back to English');
+    const englishStatements = SIMULATED_STATEMENTS_BY_LANGUAGE.en;
+    const selectedStatement = englishStatements[Math.floor(Math.random() * englishStatements.length)];
+    console.log('✅ Selected simulated statement (English fallback):', selectedStatement.substring(0, 50));
+    return selectedStatement;
+  }
+  
   const selectedStatement = statements[Math.floor(Math.random() * statements.length)];
   console.log('✅ Selected simulated statement:', selectedStatement.substring(0, 50));
+  console.log('✅ Language match confirmed - simulated statement is in', language);
   return selectedStatement;
 }
