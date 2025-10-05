@@ -38,13 +38,34 @@ const PROMPTS = [
   "What's the weirdest thing in your search history?"
 ];
 
-const AI_ANSWERS = [
-  "I got stuck in a parallel universe for a bit",
-  "How to train my pet rock to do tricks",
-  "The Chronicles of Procrastination: A Work in Progress",
-  "Captain Obvious with the power of stating the obvious",
-  "celebrity name + 'feet pics' (it was for science)"
-];
+// AI answers mapped to each prompt contextually
+const AI_ANSWERS_BY_PROMPT: Record<string, string[]> = {
+  "What's the worst excuse for being late?": [
+    "I got stuck in a parallel universe for a bit",
+    "My alarm clock joined a union and went on strike",
+    "I was abducted by aliens who needed directions",
+  ],
+  "What's the most ridiculous thing you've ever Googled?": [
+    "How to train my pet rock to do tricks",
+    "Do fish get thirsty",
+    "Can you get a refund on a bad haircut from yourself",
+  ],
+  "What would your autobiography be titled?": [
+    "The Chronicles of Procrastination: A Work in Progress",
+    "Accidentally Adult: A Survival Guide",
+    "I Thought There'd Be More Naps: My Story",
+  ],
+  "What's your superhero name and power?": [
+    "Captain Obvious with the power of stating the obvious",
+    "The Procrastinator with the power of doing it tomorrow",
+    "Snooze Button Man with the power of five more minutes",
+  ],
+  "What's the weirdest thing in your search history?": [
+    "How many calories are in a crayon",
+    "Do penguins have knees",
+    "Why does my cat stare at the wall",
+  ],
+};
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -146,15 +167,18 @@ const Room = () => {
   };
 
   const handlePlayingPhaseEnd = () => {
-    // Add AI submission
-    const aiIndex = Math.floor(Math.random() * AI_ANSWERS.length);
+    // Add AI submission with contextual answer
+    const aiAnswersForPrompt = AI_ANSWERS_BY_PROMPT[currentPrompt] || [];
+    const aiIndex = Math.floor(Math.random() * aiAnswersForPrompt.length);
     const aiSubmission: Submission = {
       id: 'ai-' + Math.random().toString(36).substring(2, 9),
-      text: AI_ANSWERS[aiIndex],
+      text: aiAnswersForPrompt[aiIndex],
       playerId: 'ai',
       playerName: 'AI',
       isAI: true
     };
+
+    console.log('🤖 AI submission created:', { text: aiSubmission.text, isAI: aiSubmission.isAI });
 
     setSubmissions(prev => {
       const allSubmissions = [...prev, aiSubmission];
@@ -176,10 +200,18 @@ const Room = () => {
       const delay = 8000 + Math.random() * 7000; // 8-15 seconds
       
       const timerId = setTimeout(() => {
+        console.log('🗳️', player.name, 'checking submissions:', submissions.map(s => ({ 
+          text: s.text.substring(0, 20), 
+          isAI: s.isAI, 
+          playerId: s.playerId 
+        })));
+
         // Filter out AI answers and their own submissions
         const votableSubmissions = submissions.filter(
           s => !s.isAI && s.playerId !== player.id
         );
+
+        console.log('✅', player.name, 'votable options:', votableSubmissions.length, 'submissions');
 
         if (votableSubmissions.length === 0) {
           console.log('⚠️ No votable submissions for', player.name);
@@ -207,6 +239,12 @@ const Room = () => {
         }
 
         const chosenSubmission = votableSubmissions[selectedIndex];
+
+        // DEFENSIVE CHECK: Never vote for AI (this should never happen due to filter above)
+        if (chosenSubmission.isAI) {
+          console.error('🚨 BUG DETECTED:', player.name, 'tried to vote for AI answer!');
+          return;
+        }
         
         const vote: Vote = {
           voterId: player.id,
@@ -215,7 +253,7 @@ const Room = () => {
           isSimulated: true,
         };
 
-        console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '...');
+        console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '... (isAI:', chosenSubmission.isAI, ')');
         setVotes(prev => {
           const newVotes = [...prev, vote];
           console.log('📊 Vote count:', newVotes.length);
