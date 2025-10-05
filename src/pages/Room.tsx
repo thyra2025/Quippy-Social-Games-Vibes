@@ -14,7 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { Player } from '@/pages/Lobby';
 import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
 import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer, GAME_MODES } from '@/types/game';
-import { getRandomPrompt, getAIAnswer } from '@/utils/gameModes/whoWroteThis';
+import { getRandomPrompt, getAIAnswer, getSimulatedAnswer } from '@/utils/gameModes/whoWroteThis';
 import { getRandomImage, getRandomCaption, CaptionImage } from '@/utils/gameModes/captionCascade';
 import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
 import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
@@ -27,7 +27,7 @@ const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const gameMode: GameMode = location.state?.gameMode || 'who-wrote-this';
   const players = (location.state?.players as Player[]) || [];
@@ -125,7 +125,7 @@ const Room = () => {
 
   const startGame = () => {
     if (gameMode === 'who-wrote-this') {
-      setCurrentPrompt(getRandomPrompt());
+      setCurrentPrompt(getRandomPrompt(language));
     } else if (gameMode === 'caption-cascade') {
       setCurrentImage(getRandomImage());
     } else if (gameMode === 'two-truths') {
@@ -168,9 +168,7 @@ const Room = () => {
           let answerText = '';
           
           if (gameMode === 'who-wrote-this') {
-            const { answer, index: answerIndex } = getRandomSimulatedAnswer(usedAnswerIndices);
-            setUsedAnswerIndices(prev => [...prev, answerIndex]);
-            answerText = answer;
+            answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
             const { caption, index: captionIndex } = getRandomCaption(usedAnswerIndices);
             setUsedAnswerIndices(prev => [...prev, captionIndex]);
@@ -272,7 +270,7 @@ const Room = () => {
     if (gameMode === 'who-wrote-this') {
       const aiSubmission: Submission = {
         id: 'ai-' + Math.random().toString(36).substring(2, 9),
-        text: getAIAnswer(currentPrompt),
+        text: getAIAnswer(currentPrompt, language),
         playerId: 'ai',
         playerName: 'AI',
         isAI: true
