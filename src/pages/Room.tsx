@@ -170,9 +170,7 @@ const Room = () => {
           if (gameMode === 'who-wrote-this') {
             answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
-            const { caption, index: captionIndex } = getRandomCaption(usedAnswerIndices);
-            setUsedAnswerIndices(prev => [...prev, captionIndex]);
-            answerText = caption;
+            answerText = getRandomCaption(language);
           } else if (gameMode === 'two-truths') {
             const { statement, index: statementIndex } = getRandomStatement(usedAnswerIndices);
             setUsedAnswerIndices(prev => [...prev, statementIndex]);
