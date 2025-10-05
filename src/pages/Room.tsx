@@ -33,10 +33,18 @@ const Room = () => {
   
   const gameMode: GameMode = location.state?.gameMode || 'who-wrote-this';
   const players = (location.state?.players as Player[]) || [];
-  const currentPlayerId = location.state?.currentPlayerId || Math.random().toString(36).substring(2, 9);
+  const currentPlayerId = location.state?.currentPlayerId;
   const currentPlayer = players.find(p => p.id === currentPlayerId);
   const currentPlayerName = currentPlayer?.name || 'Player';
   const simulatedPlayers = players.filter(p => p.isSimulated);
+
+  // Redirect to lobby if no valid player ID
+  useEffect(() => {
+    if (!currentPlayerId || !currentPlayer) {
+      console.error('❌ No valid player ID found, redirecting to lobby');
+      navigate(`/lobby/${roomId}`, { replace: true });
+    }
+  }, [currentPlayerId, currentPlayer, roomId, navigate]);
 
   const [gamePhase, setGamePhase] = useState<GamePhase>('lobby');
   const [currentPrompt, setCurrentPrompt] = useState('');
