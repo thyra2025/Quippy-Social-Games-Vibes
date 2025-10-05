@@ -56,7 +56,7 @@ export const generateSimulatedPlayers = (): Player[] => {
   const shuffledColors = [...AVATAR_COLORS].sort(() => Math.random() - 0.5);
 
   return shuffledNames.slice(0, count).map((name, index) => ({
-    id: `sim-${Math.random().toString(36).substring(2, 9)}`,
+    id: crypto.randomUUID(),
     name,
     isHost: false,
     isSimulated: true,
