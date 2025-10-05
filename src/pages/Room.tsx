@@ -141,6 +141,77 @@ const Room = () => {
     };
   }, [roomId, currentRoundNumber]);
 
+  // Fetch votes from database and set up real-time subscription
+  useEffect(() => {
+    if (!roomId) return;
+
+    let channel: RealtimeChannel;
+
+    const fetchVotes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('votes')
+          .select('*')
+          .eq('room_id', roomId)
+          .eq('round_number', currentRoundNumber)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const formattedVotes: Vote[] = data.map(v => ({
+            voterId: v.voter_id,
+            voterName: players.find(p => p.id === v.voter_id)?.name || 'Unknown',
+            submissionId: v.submission_id,
+            isSimulated: players.find(p => p.id === v.voter_id)?.isSimulated || false,
+          }));
+          setVotes(formattedVotes);
+        }
+      } catch (error) {
+        console.error('Error fetching votes:', error);
+      }
+    };
+
+    fetchVotes();
+
+    // Set up real-time subscription for votes
+    channel = supabase
+      .channel(`room:${roomId}:votes`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'votes',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log('🗳️ New vote received:', payload);
+          const newVote = payload.new;
+          if (newVote.round_number === currentRoundNumber) {
+            const formattedVote: Vote = {
+              voterId: newVote.voter_id,
+              voterName: players.find(p => p.id === newVote.voter_id)?.name || 'Unknown',
+              submissionId: newVote.submission_id,
+              isSimulated: players.find(p => p.id === newVote.voter_id)?.isSimulated || false,
+            };
+            setVotes(prev => {
+              // Avoid duplicates
+              if (prev.some(v => v.voterId === formattedVote.voterId && v.submissionId === formattedVote.submissionId)) {
+                return prev;
+              }
+              return [...prev, formattedVote];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId, currentRoundNumber]);
+
   // Save recap when game ends
   useEffect(() => {
     if (gamePhase === 'recap' && roomId) {
@@ -431,7 +502,7 @@ const Room = () => {
     simulatedPlayers.forEach((player) => {
       const delay = 8000 + Math.random() * 7000;
       
-      const timerId = setTimeout(() => {
+      const timerId = setTimeout(async () => {
         console.log('🗳️', player.name, 'checking submissions:', submissions.map(s => ({ 
           text: s.text.substring(0, 20), 
           isAI: s.isAI, 
@@ -488,19 +559,22 @@ const Room = () => {
           return;
         }
         
-        const vote: Vote = {
-          voterId: player.id,
-          voterName: player.name,
-          submissionId: chosenSubmission.id,
-          isSimulated: true,
-        };
+        try {
+          // Save to database
+          const { error } = await supabase
+            .from('votes')
+            .insert({
+              room_id: roomId,
+              voter_id: player.id,
+              submission_id: chosenSubmission.id,
+              round_number: currentRoundNumber,
+            });
 
-        console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '... (isAI:', chosenSubmission.isAI, ')');
-        setVotes(prev => {
-          const newVotes = [...prev, vote];
-          console.log('📊 Vote count:', newVotes.length);
-          return newVotes;
-        });
+          if (error) throw error;
+          console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '... (isAI:', chosenSubmission.isAI, ')');
+        } catch (error) {
+          console.error('Error saving simulated vote:', error);
+        }
       }, delay);
 
       return () => clearTimeout(timerId);
@@ -524,7 +598,7 @@ const Room = () => {
     }
   }, [votes.length, gamePhase, simulatedPlayers.length]);
 
-  const handleVote = (submissionId: string) => {
+  const handleVote = async (submissionId: string) => {
     const submission = submissions.find(s => s.id === submissionId);
     
     // Prevent voting for yourself
@@ -536,25 +610,34 @@ const Room = () => {
       return;
     }
 
-    const newVote: Vote = {
-      voterId: currentPlayerId,
-      voterName: currentPlayerName,
-      submissionId,
-      isSimulated: false,
-    };
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('votes')
+        .insert({
+          room_id: roomId,
+          voter_id: currentPlayerId,
+          submission_id: submissionId,
+          round_number: currentRoundNumber,
+        });
 
-    console.log('👤 Real player voted for:', submission?.text.substring(0, 30) + '...');
-    setVotes(prev => {
-      const newVotes = [...prev, newVote];
-      console.log('📊 Vote count after player vote:', newVotes.length);
-      return newVotes;
-    });
-    setHasVoted(true);
+      if (error) throw error;
 
-    toast({
-      title: "Vote recorded!",
-      description: "Waiting for other players...",
-    });
+      console.log('👤 Real player voted for:', submission?.text.substring(0, 30) + '...');
+      setHasVoted(true);
+
+      toast({
+        title: "Vote recorded!",
+        description: "Waiting for other players...",
+      });
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit vote. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePlayAgain = () => {
