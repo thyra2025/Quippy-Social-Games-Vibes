@@ -556,7 +556,6 @@ const Room = () => {
               </div>
               <WhatsAppShareButton
                 text={`🎉 Quippy Recap 🎉\n\nPrompt: ${currentPrompt}\n\nWinner: ${winner.submission?.playerName} with "${winner.submission?.text}" (${winner.votes} vote${winner.votes !== 1 ? 's' : ''})\n\nThe AI wrote: "${aiSubmission?.text}"\n\nWant to play? ${roomLink}`}
-                url=""
               />
             </div>
           </Card>
