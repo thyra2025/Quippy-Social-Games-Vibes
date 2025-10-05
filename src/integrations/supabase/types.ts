@@ -99,6 +99,32 @@ export type Database = {
           },
         ]
       }
+      room_secrets: {
+        Row: {
+          created_at: string
+          room_id: string
+          secret_token: string
+        }
+        Insert: {
+          created_at?: string
+          room_id: string
+          secret_token?: string
+        }
+        Update: {
+          created_at?: string
+          room_id?: string
+          secret_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_secrets_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           created_at: string
@@ -108,7 +134,6 @@ export type Database = {
           id: string
           language: string
           mode: string
-          secret_token: string
           updated_at: string
         }
         Insert: {
@@ -119,7 +144,6 @@ export type Database = {
           id: string
           language?: string
           mode?: string
-          secret_token?: string
           updated_at?: string
         }
         Update: {
@@ -130,7 +154,6 @@ export type Database = {
           id?: string
           language?: string
           mode?: string
-          secret_token?: string
           updated_at?: string
         }
         Relationships: []

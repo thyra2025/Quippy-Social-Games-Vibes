@@ -45,21 +45,30 @@ const Landing = () => {
       const playerId = crypto.randomUUID();
       
       // Create room in Supabase
-      const { data: roomData, error: roomError } = await supabase
+      const { error: roomError } = await supabase
         .from('rooms')
         .insert({
           id: roomId,
           host_id: playerId,
           game_phase: 'lobby',
           mode: 'who-wrote-this',
+        });
+
+      if (roomError) throw roomError;
+
+      // Create secret token for the room
+      const { data: secretData, error: secretError } = await supabase
+        .from('room_secrets')
+        .insert({
+          room_id: roomId,
         })
-        .select('id, secret_token')
+        .select('secret_token')
         .single();
 
-      if (roomError || !roomData) throw roomError;
+      if (secretError || !secretData) throw secretError;
 
       // Store the secret token in localStorage for host authentication
-      localStorage.setItem(`room_token_${roomId}`, roomData.secret_token);
+      localStorage.setItem(`room_token_${roomId}`, secretData.secret_token);
 
       // Create host player object
       const hostPlayer = {

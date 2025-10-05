@@ -29,15 +29,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify the secret token matches the room
-    const { data: room, error: verifyError } = await supabase
-      .from('rooms')
-      .select('id, secret_token')
-      .eq('id', roomId)
+    // Verify the secret token matches the room (from secure table)
+    const { data: roomSecret, error: verifyError } = await supabase
+      .from('room_secrets')
+      .select('room_id, secret_token')
+      .eq('room_id', roomId)
       .eq('secret_token', secretToken)
       .single();
 
-    if (verifyError || !room) {
+    if (verifyError || !roomSecret) {
       console.error('Token verification failed:', verifyError);
       return new Response(
         JSON.stringify({ error: 'Invalid room or unauthorized access' }),
