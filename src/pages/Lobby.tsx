@@ -11,6 +11,7 @@ import { WhatsAppShareButton } from '@/components/WhatsAppShareButton';
 import { generateRoomLink } from '@/utils/whatsapp';
 import { toast } from '@/hooks/use-toast';
 import { generateSimulatedPlayers } from '@/utils/simulatedPlayers';
+import { GAME_MODES, GameMode } from '@/types/game';
 
 export interface Player {
   id: string;
@@ -28,6 +29,7 @@ const Lobby = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerId, setCurrentPlayerId] = useState('');
   const [enableSimulated, setEnableSimulated] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<GameMode>('who-wrote-this');
 
   useEffect(() => {
     if (hasJoined && enableSimulated && !players.some(p => p.isSimulated)) {
@@ -66,7 +68,7 @@ const Lobby = () => {
   };
 
   const handleStartGame = () => {
-    navigate(`/room/${roomId}`, { state: { players, currentPlayerId } });
+    navigate(`/room/${roomId}`, { state: { players, currentPlayerId, gameMode: selectedMode } });
   };
 
   const handleLeave = () => {
@@ -151,6 +153,39 @@ const Lobby = () => {
             className="max-w-md mx-auto"
           />
         </Card>
+
+        {/* Game Mode Selection */}
+        {isHost && (
+          <Card className="card-game">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-base font-semibold">Game Mode</Label>
+                <p className="text-sm text-muted-foreground">Choose how you want to play</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {GAME_MODES.map((mode) => (
+                  <button
+                    key={mode.id}
+                    onClick={() => setSelectedMode(mode.id)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      selectedMode === mode.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">{mode.icon}</span>
+                      <div className="flex-1">
+                        <h4 className="font-semibold mb-1">{mode.name}</h4>
+                        <p className="text-sm text-muted-foreground">{mode.description}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Simulated Players Toggle */}
         <Card className="card-game">
