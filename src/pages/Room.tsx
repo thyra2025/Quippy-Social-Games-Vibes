@@ -436,7 +436,7 @@ const Room = () => {
           if (gameMode === 'who-wrote-this') {
             answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
-            answerText = getRandomCaption(language);
+            answerText = currentImage ? getRandomCaption(currentImage.id, language) : '';
           } else if (gameMode === 'two-truths') {
             answerText = getRandomStatement(language);
           }
