@@ -5,6 +5,16 @@ const AI_STATEMENTS = [
   "I was on a game show once",
   "I collect vintage postcards",
   "I've run a marathon",
+  "I've broken the same bone twice",
+  "I can recite the alphabet backwards",
+  "I've met someone famous at the airport",
+  "I have a scar from a childhood adventure",
+  "I once won a local competition",
+  "I'm related to someone semi-famous",
+  "I've been to four different countries",
+  "I can play two instruments",
+  "I've appeared in a commercial",
+  "I once shook hands with a politician",
 ];
 
 const SIMULATED_STATEMENTS = [
@@ -16,6 +26,16 @@ const SIMULATED_STATEMENTS = [
   "I've watched the same movie 20+ times",
   "I can't swim",
   "I hate the smell of coffee",
+  "I'm afraid of the dark",
+  "I've never eaten sushi",
+  "I can touch my nose with my tongue",
+  "I've read the same book 5 times",
+  "I don't like chocolate",
+  "I've never watched Star Wars",
+  "I collect bottle caps",
+  "I can't ride a bike",
+  "I've met all my cousins only once",
+  "I sleep with a night light",
 ];
 
 export function getRandomAIStatement(): string {
