@@ -11,11 +11,13 @@ import { useCountdown } from '@/hooks/useCountdown';
 import { toast } from '@/hooks/use-toast';
 import { Player } from '@/pages/Lobby';
 import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
-import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer } from '@/types/game';
+import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer, GAME_MODES } from '@/types/game';
 import { getRandomPrompt, getAIAnswer } from '@/utils/gameModes/whoWroteThis';
 import { getRandomImage, getRandomCaption, CaptionImage } from '@/utils/gameModes/captionCascade';
 import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
 import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
+import { saveRecap } from '@/utils/partyFeedStorage';
+import { GameRecap } from '@/types/partyFeed';
 
 type GamePhase = 'lobby' | 'playing' | 'voting' | 'reveal' | 'recap';
 
@@ -57,6 +59,66 @@ const Room = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Save recap when game ends
+  useEffect(() => {
+    if (gamePhase === 'recap' && roomId) {
+      const gameModeConfig = GAME_MODES.find(m => m.id === gameMode);
+      const winner = getWinner();
+      const aiSubmission = submissions.find(s => s.isAI);
+      
+      let winnerInfo = '';
+      let prompt = '';
+      
+      if (gameMode === 'instant-trivia' && currentTriviaQuestion) {
+        const correctCount = triviaAnswers.filter(a => a.isCorrect).length;
+        winnerInfo = correctCount === 0 
+          ? 'Nobody got it right!' 
+          : `${correctCount} player${correctCount !== 1 ? 's' : ''} answered correctly`;
+        prompt = currentTriviaQuestion.question;
+      } else if (gameMode === 'two-truths') {
+        winnerInfo = `${winner.submission?.playerName} - Everyone believed: "${winner.submission?.text}"`;
+        prompt = 'Write one true statement about yourself';
+      } else if (gameMode === 'caption-cascade') {
+        winnerInfo = `${winner.submission?.playerName} - ${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`;
+        prompt = 'Write the funniest caption';
+      } else {
+        winnerInfo = `${winner.submission?.playerName} - ${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`;
+        prompt = currentPrompt;
+      }
+
+      const recap: GameRecap = {
+        id: Math.random().toString(36).substring(2, 9),
+        roomId,
+        gameMode,
+        gameModeName: gameModeConfig?.name || '',
+        gameModeIcon: gameModeConfig?.icon || '🎮',
+        prompt,
+        winnerInfo,
+        timestamp: Date.now(),
+        submissions: submissions.map(s => ({
+          id: s.id,
+          text: s.text,
+          playerId: s.playerId,
+          playerName: s.playerName,
+          isAI: s.isAI,
+          votes: votes.filter(v => v.submissionId === s.id).length,
+        })),
+        ...(gameMode === 'instant-trivia' && currentTriviaQuestion && {
+          triviaQuestion: currentTriviaQuestion.question,
+          triviaCorrectAnswer: currentTriviaQuestion.options[currentTriviaQuestion.correctAnswer],
+          triviaAnswers: triviaAnswers.map(a => ({
+            playerId: a.playerId,
+            playerName: a.playerName,
+            isCorrect: a.isCorrect,
+          })),
+        }),
+      };
+
+      saveRecap(roomId, recap);
+      console.log('💾 Recap saved:', recap);
+    }
+  }, [gamePhase, roomId]);
 
   const startGame = () => {
     if (gameMode === 'who-wrote-this') {

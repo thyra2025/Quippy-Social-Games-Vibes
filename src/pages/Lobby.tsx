@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Crown, LogOut, Play, Bot } from 'lucide-react';
+import { Users, Crown, LogOut, Play, Bot, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -134,7 +134,17 @@ const Lobby = () => {
           <LogOut className="h-5 w-5 mr-2" />
           Leave
         </Button>
-        <ThemeSelector />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/party-feed/${roomId}`)}
+            className="rounded-xl gap-2"
+          >
+            <History className="h-4 w-4" />
+            Party Feed
+          </Button>
+          <ThemeSelector />
+        </div>
       </header>
 
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">

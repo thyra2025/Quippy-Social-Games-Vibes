@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Landing from "./pages/Landing";
 import Lobby from "./pages/Lobby";
 import Room from "./pages/Room";
+import PartyFeed from "./pages/PartyFeed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/lobby/:roomId" element={<Lobby />} />
             <Route path="/room/:roomId" element={<Room />} />
+            <Route path="/party-feed/:roomId" element={<PartyFeed />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
