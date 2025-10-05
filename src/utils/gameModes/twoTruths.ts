@@ -101,11 +101,17 @@ const SIMULATED_STATEMENTS_BY_LANGUAGE: Record<Language, string[]> = {
 };
 
 export function getRandomAIStatement(language: Language = 'en'): string {
+  console.log('🤖 getRandomAIStatement called with language:', language);
   const statements = AI_STATEMENTS_BY_LANGUAGE[language] || AI_STATEMENTS_BY_LANGUAGE.en;
-  return statements[Math.floor(Math.random() * statements.length)];
+  const selectedStatement = statements[Math.floor(Math.random() * statements.length)];
+  console.log('✅ Selected AI statement:', selectedStatement.substring(0, 50));
+  return selectedStatement;
 }
 
 export function getRandomStatement(language: Language = 'en'): string {
+  console.log('🎭 getRandomStatement called with language:', language);
   const statements = SIMULATED_STATEMENTS_BY_LANGUAGE[language] || SIMULATED_STATEMENTS_BY_LANGUAGE.en;
-  return statements[Math.floor(Math.random() * statements.length)];
+  const selectedStatement = statements[Math.floor(Math.random() * statements.length)];
+  console.log('✅ Selected simulated statement:', selectedStatement.substring(0, 50));
+  return selectedStatement;
 }

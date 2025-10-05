@@ -214,9 +214,12 @@ export const TRIVIA_QUESTIONS_BY_LANGUAGE: Record<string, TriviaQuestion[]> = {
 };
 
 export function getRandomQuestion(language: string = 'en'): TriviaQuestion {
+  console.log('❓ getRandomQuestion called with language:', language);
   const questions = TRIVIA_QUESTIONS_BY_LANGUAGE[language] || TRIVIA_QUESTIONS_BY_LANGUAGE.en;
   const randomIndex = Math.floor(Math.random() * questions.length);
-  return questions[randomIndex];
+  const selectedQuestion = questions[randomIndex];
+  console.log('✅ Selected question:', selectedQuestion.question.substring(0, 50));
+  return selectedQuestion;
 }
 
 export function shouldSimulatedPlayerAnswerCorrectly(): boolean {

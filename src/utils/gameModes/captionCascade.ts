@@ -130,6 +130,9 @@ export function getRandomImage(): CaptionImage {
 }
 
 export function getRandomCaption(language: Language = 'en'): string {
+  console.log('💬 getRandomCaption called with language:', language);
   const captions = SIMULATED_CAPTIONS_BY_LANGUAGE[language] || SIMULATED_CAPTIONS_BY_LANGUAGE.en;
-  return captions[Math.floor(Math.random() * captions.length)];
+  const selectedCaption = captions[Math.floor(Math.random() * captions.length)];
+  console.log('✅ Selected caption:', selectedCaption.substring(0, 50));
+  return selectedCaption;
 }

@@ -353,30 +353,41 @@ export const SIMULATED_ANSWERS_BY_LANGUAGE: Record<Language, Record<string, stri
 };
 
 export function getRandomPrompt(language: Language = 'en'): string {
+  console.log('🌐 getRandomPrompt called with language:', language);
   const prompts = PROMPTS_BY_LANGUAGE[language] || PROMPTS_BY_LANGUAGE.en;
-  return prompts[Math.floor(Math.random() * prompts.length)];
+  const selectedPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  console.log('📝 Selected prompt:', selectedPrompt);
+  return selectedPrompt;
 }
 
 export function getAIAnswer(prompt: string, language: Language = 'en'): string {
+  console.log('🤖 getAIAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
   const languageAnswers = AI_ANSWERS_BY_LANGUAGE[language] || AI_ANSWERS_BY_LANGUAGE.en;
   const answers = languageAnswers[prompt] || [];
   
   if (answers.length === 0 && language !== 'en') {
+    console.log('⚠️ No answers found for prompt in', language, '- falling back to English');
     const englishAnswers = AI_ANSWERS_BY_LANGUAGE.en[prompt] || [];
     return englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
   }
   
-  return answers[Math.floor(Math.random() * answers.length)] || '';
+  const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
+  console.log('✅ Selected AI answer:', selectedAnswer.substring(0, 50));
+  return selectedAnswer;
 }
 
 export function getSimulatedAnswer(prompt: string, language: Language = 'en'): string {
+  console.log('🎭 getSimulatedAnswer called with language:', language, 'prompt:', prompt.substring(0, 50));
   const languageAnswers = SIMULATED_ANSWERS_BY_LANGUAGE[language] || SIMULATED_ANSWERS_BY_LANGUAGE.en;
   const answers = languageAnswers[prompt] || [];
   
   if (answers.length === 0 && language !== 'en') {
+    console.log('⚠️ No simulated answers found for prompt in', language, '- falling back to English');
     const englishAnswers = SIMULATED_ANSWERS_BY_LANGUAGE.en[prompt] || [];
     return englishAnswers[Math.floor(Math.random() * englishAnswers.length)] || '';
   }
   
-  return answers[Math.floor(Math.random() * answers.length)] || '';
+  const selectedAnswer = answers[Math.floor(Math.random() * answers.length)] || '';
+  console.log('✅ Selected simulated answer:', selectedAnswer.substring(0, 50));
+  return selectedAnswer;
 }

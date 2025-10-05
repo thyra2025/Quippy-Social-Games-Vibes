@@ -124,6 +124,7 @@ const Room = () => {
   }, [gamePhase, roomId]);
 
   const startGame = () => {
+    console.log('🎮 Starting game with language:', language, 'gameMode:', gameMode);
     if (gameMode === 'who-wrote-this') {
       setCurrentPrompt(getRandomPrompt(language));
     } else if (gameMode === 'caption-cascade') {
