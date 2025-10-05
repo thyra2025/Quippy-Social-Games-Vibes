@@ -14,6 +14,7 @@ import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
 import { GameMode, Submission, Vote } from '@/types/game';
 import { getRandomPrompt, getAIAnswer } from '@/utils/gameModes/whoWroteThis';
 import { getRandomImage, getRandomCaption, CaptionImage } from '@/utils/gameModes/captionCascade';
+import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
 
 type GamePhase = 'lobby' | 'playing' | 'voting' | 'recap';
 
@@ -57,6 +58,8 @@ const Room = () => {
       setCurrentPrompt(getRandomPrompt());
     } else if (gameMode === 'caption-cascade') {
       setCurrentImage(getRandomImage());
+    } else if (gameMode === 'two-truths') {
+      setCurrentPrompt('Write one true statement about yourself');
     }
     setGamePhase('playing');
     startTimer();
@@ -80,6 +83,10 @@ const Room = () => {
           const { caption, index: captionIndex } = getRandomCaption(usedAnswerIndices);
           setUsedAnswerIndices(prev => [...prev, captionIndex]);
           answerText = caption;
+        } else if (gameMode === 'two-truths') {
+          const { statement, index: statementIndex } = getRandomStatement(usedAnswerIndices);
+          setUsedAnswerIndices(prev => [...prev, statementIndex]);
+          answerText = statement;
         }
         
         const submission: Submission = {
@@ -128,7 +135,7 @@ const Room = () => {
   };
 
   const handlePlayingPhaseEnd = () => {
-    // Add AI submission only for Who Wrote This mode
+    // Add AI submission for Who Wrote This and Two Truths modes
     if (gameMode === 'who-wrote-this') {
       const aiSubmission: Submission = {
         id: 'ai-' + Math.random().toString(36).substring(2, 9),
@@ -138,6 +145,19 @@ const Room = () => {
         isAI: true
       };
       console.log('🤖 AI submission created:', { text: aiSubmission.text, isAI: aiSubmission.isAI });
+      setSubmissions(prev => {
+        const allSubmissions = [...prev, aiSubmission];
+        return allSubmissions.sort(() => Math.random() - 0.5);
+      });
+    } else if (gameMode === 'two-truths') {
+      const aiSubmission: Submission = {
+        id: 'ai-' + Math.random().toString(36).substring(2, 9),
+        text: getRandomAIStatement(),
+        playerId: 'ai',
+        playerName: 'AI',
+        isAI: true
+      };
+      console.log('🤖 AI statement created:', { text: aiSubmission.text, isAI: aiSubmission.isAI });
       setSubmissions(prev => {
         const allSubmissions = [...prev, aiSubmission];
         return allSubmissions.sort(() => Math.random() - 0.5);
@@ -167,8 +187,14 @@ const Room = () => {
           playerId: s.playerId 
         })));
 
-        // Filter out AI and own submissions
-        const votableSubmissions = submissions.filter(s => !s.isAI && s.playerId !== player.id);
+        // For Two Truths mode, bots can vote for AI (trying to guess which is fake)
+        // For other modes, filter out AI and own submissions
+        let votableSubmissions: Submission[];
+        if (gameMode === 'two-truths') {
+          votableSubmissions = submissions.filter(s => s.playerId !== player.id);
+        } else {
+          votableSubmissions = submissions.filter(s => !s.isAI && s.playerId !== player.id);
+        }
 
         console.log('✅', player.name, 'votable options:', votableSubmissions.length, 'submissions');
 
@@ -177,11 +203,17 @@ const Room = () => {
           return;
         }
 
-        // Slightly favor longer/funnier answers
+        // Slightly favor longer/funnier answers, or "too good to be true" for Two Truths
         const weights = votableSubmissions.map(s => {
           let weight = 1;
-          if (s.text.length > 50) weight += 0.3;
-          if (/cat|coffee|dog|quantum|wikipedia|tiktok/i.test(s.text)) weight += 0.4;
+          if (gameMode === 'two-truths') {
+            // Slight bias toward impressive/unusual statements
+            if (/celebrity|languages|countries|marathon|game show/i.test(s.text)) weight += 0.5;
+            if (s.isAI) weight += 0.3; // Slight bias to vote for AI
+          } else {
+            if (s.text.length > 50) weight += 0.3;
+            if (/cat|coffee|dog|quantum|wikipedia|tiktok/i.test(s.text)) weight += 0.4;
+          }
           return weight;
         });
 
@@ -199,8 +231,8 @@ const Room = () => {
 
         const chosenSubmission = votableSubmissions[selectedIndex];
 
-        // DEFENSIVE CHECK
-        if (chosenSubmission.isAI) {
+        // DEFENSIVE CHECK (only for non-two-truths modes)
+        if (gameMode !== 'two-truths' && chosenSubmission.isAI) {
           console.error('🚨 BUG DETECTED:', player.name, 'tried to vote for AI answer!');
           return;
         }
@@ -294,20 +326,45 @@ const Room = () => {
       return acc;
     }, {} as Record<string, number>);
 
-    let maxVotes = 0;
-    let winnerId = '';
-    
-    Object.entries(voteCounts).forEach(([id, count]) => {
-      if (count > maxVotes) {
-        maxVotes = count;
-        winnerId = id;
-      }
-    });
+    if (gameMode === 'two-truths') {
+      // Winner is the human statement with FEWEST votes (most believed)
+      // Also track who voted for AI correctly
+      const aiSubmission = submissions.find(s => s.isAI);
+      const aiVotes = aiSubmission ? voteCounts[aiSubmission.id] || 0 : 0;
+      
+      let minVotes = Infinity;
+      let winnerId = '';
+      
+      submissions.filter(s => !s.isAI).forEach((submission) => {
+        const voteCount = voteCounts[submission.id] || 0;
+        if (voteCount < minVotes) {
+          minVotes = voteCount;
+          winnerId = submission.id;
+        }
+      });
 
-    return {
-      submission: submissions.find(s => s.id === winnerId),
-      votes: maxVotes
-    };
+      return {
+        submission: submissions.find(s => s.id === winnerId),
+        votes: minVotes,
+        aiVotes,
+      };
+    } else {
+      // Standard: most votes wins
+      let maxVotes = 0;
+      let winnerId = '';
+      
+      Object.entries(voteCounts).forEach(([id, count]) => {
+        if (count > maxVotes) {
+          maxVotes = count;
+          winnerId = id;
+        }
+      });
+
+      return {
+        submission: submissions.find(s => s.id === winnerId),
+        votes: maxVotes
+      };
+    }
   };
 
   const roomLink = generateRoomLink(roomId || '');
@@ -343,6 +400,7 @@ const Room = () => {
     let promptText = '';
     if (gameMode === 'who-wrote-this') promptText = currentPrompt;
     else if (gameMode === 'caption-cascade') promptText = 'Write the funniest caption for this image';
+    else if (gameMode === 'two-truths') promptText = currentPrompt;
 
     return (
       <div className="min-h-screen flex flex-col">
@@ -375,7 +433,9 @@ const Room = () => {
           {/* Prompt */}
           <Card className="card-game text-center">
             <h2 className="text-2xl font-bold mb-4">
-              {gameMode === 'who-wrote-this' ? 'Who Wrote This?' : 'Caption Cascade'}
+              {gameMode === 'who-wrote-this' ? 'Who Wrote This?' : 
+               gameMode === 'caption-cascade' ? 'Caption Cascade' : 
+               'Two Truths and a Bot'}
             </h2>
             <div className="inline-block px-6 py-4 rounded-xl theme-gradient">
               <p className="text-xl font-bold text-white">{promptText}</p>
@@ -403,10 +463,16 @@ const Room = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    {gameMode === 'caption-cascade' ? 'Your Caption' : 'Your Answer'}
+                    {gameMode === 'caption-cascade' ? 'Your Caption' : 
+                     gameMode === 'two-truths' ? 'Your True Statement' : 
+                     'Your Answer'}
                   </label>
                   <Textarea
-                    placeholder={gameMode === 'caption-cascade' ? 'Write a funny caption...' : 'Type your answer here...'}
+                    placeholder={
+                      gameMode === 'caption-cascade' ? 'Write a funny caption...' : 
+                      gameMode === 'two-truths' ? 'Write one true fact about yourself...' :
+                      'Type your answer here...'
+                    }
                     value={playerAnswer}
                     onChange={(e) => setPlayerAnswer(e.target.value.slice(0, 200))}
                     className="min-h-[120px]"
@@ -422,7 +488,9 @@ const Room = () => {
                   className="w-full theme-gradient text-white font-semibold py-6 text-lg rounded-xl"
                 >
                   <Send className="h-5 w-5 mr-2" />
-                  Submit {gameMode === 'caption-cascade' ? 'Caption' : 'Answer'}
+                  Submit {gameMode === 'caption-cascade' ? 'Caption' : 
+                          gameMode === 'two-truths' ? 'Statement' : 
+                          'Answer'}
                 </Button>
               </div>
             </Card>
@@ -430,7 +498,11 @@ const Room = () => {
             <Card className="card-game text-center">
               <div className="py-8">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
-                <h3 className="text-xl font-bold">{gameMode === 'caption-cascade' ? 'Caption' : 'Answer'} Submitted!</h3>
+                <h3 className="text-xl font-bold">
+                  {gameMode === 'caption-cascade' ? 'Caption' : 
+                   gameMode === 'two-truths' ? 'Statement' : 
+                   'Answer'} Submitted!
+                </h3>
                 <p className="text-muted-foreground mt-2">Waiting for other players...</p>
               </div>
             </Card>
@@ -443,8 +515,17 @@ const Room = () => {
   // Voting Phase
   if (gamePhase === 'voting') {
     let votingPrompt = '';
-    if (gameMode === 'who-wrote-this') votingPrompt = 'Vote for the Best Answer!';
-    else if (gameMode === 'caption-cascade') votingPrompt = 'Vote for the Funniest Caption!';
+    let votingInstruction = '';
+    if (gameMode === 'who-wrote-this') {
+      votingPrompt = 'Vote for the Best Answer!';
+      votingInstruction = 'Which one did you like the most?';
+    } else if (gameMode === 'caption-cascade') {
+      votingPrompt = 'Vote for the Funniest Caption!';
+      votingInstruction = 'Which one made you laugh?';
+    } else if (gameMode === 'two-truths') {
+      votingPrompt = 'Which statement do you think the AI wrote?';
+      votingInstruction = 'Vote for the statement you think is fake';
+    }
 
     return (
       <div className="min-h-screen flex flex-col">
@@ -477,7 +558,7 @@ const Room = () => {
 
           <div className="grid gap-4">
             {submissions.map((submission) => {
-              const isOwn = submission.playerId === currentPlayerId;
+              const isOwn = submission.playerId === currentPlayerId && gameMode !== 'two-truths';
               const hasVotedFor = votes.some(v => v.submissionId === submission.id && v.voterId === currentPlayerId);
               const submissionVotes = votes.filter(v => v.submissionId === submission.id);
               const player = players.find(p => p.id === submission.playerId);
@@ -523,7 +604,19 @@ const Room = () => {
                       variant={hasVotedFor ? "default" : "outline"}
                       className="w-full"
                     >
-                      {isOwn ? `Your ${gameMode === 'caption-cascade' ? 'Caption' : 'Answer'}` : hasVotedFor ? 'Voted!' : 'Vote for This'}
+                      {(() => {
+                        const isMySubmission = submission.playerId === currentPlayerId;
+                        if (isMySubmission) {
+                          switch (gameMode) {
+                            case 'caption-cascade': return 'Your Caption';
+                            case 'two-truths': return 'Your Statement';
+                            case 'who-wrote-this': return 'Your Answer';
+                          }
+                        }
+                        if (hasVotedFor) return 'Voted!';
+                        if (gameMode === 'two-truths') return 'Vote as Fake';
+                        return 'Vote for This';
+                      })()}
                     </Button>
                   </div>
                 </Card>
@@ -556,26 +649,43 @@ const Room = () => {
             <Trophy className="h-12 w-12 text-white" />
           </div>
           <h2 className="text-2xl font-bold mb-4">
-            {gameMode === 'caption-cascade' ? 'Funniest Caption!' : 'Winning Answer!'}
+            {gameMode === 'caption-cascade' ? 'Funniest Caption!' : 
+             gameMode === 'two-truths' ? 'Most Believed Statement!' : 
+             'Winning Answer!'}
           </h2>
           <div className="bg-primary/10 rounded-xl p-6 mb-4">
             <p className="text-xl font-semibold">{winner.submission?.text}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {winner.votes} vote{winner.votes !== 1 ? 's' : ''}
+              {gameMode === 'two-truths' 
+                ? `Only ${winner.votes} vote${winner.votes !== 1 ? 's' : ''} thought this was fake!`
+                : `${winner.votes} vote${winner.votes !== 1 ? 's' : ''}`
+              }
             </p>
+            {gameMode === 'two-truths' && winner.submission && (
+              <p className="text-primary font-semibold mt-2">
+                by {winner.submission.playerName}
+              </p>
+            )}
           </div>
-          {winner.submission?.isAI && (
+          {winner.submission?.isAI && gameMode !== 'two-truths' && (
             <p className="text-primary font-semibold">🤖 This was the AI answer!</p>
           )}
         </Card>
 
-        {/* AI Reveal for Who Wrote This */}
-        {gameMode === 'who-wrote-this' && aiSubmission && (
+        {/* AI Reveal for Who Wrote This and Two Truths */}
+        {(gameMode === 'who-wrote-this' || gameMode === 'two-truths') && aiSubmission && (
           <Card className="card-game">
-            <h3 className="font-bold mb-2">AI Answer Revealed:</h3>
-            <div className="bg-muted rounded-xl p-4">
+            <h3 className="font-bold mb-2">
+              {gameMode === 'two-truths' ? 'AI Fake Statement Revealed:' : 'AI Answer Revealed:'}
+            </h3>
+            <div className="bg-muted rounded-xl p-4 mb-2">
               <p className="text-lg">{aiSubmission.text}</p>
             </div>
+            {gameMode === 'two-truths' && (
+              <p className="text-sm text-muted-foreground">
+                {winner.aiVotes || 0} player{(winner.aiVotes || 0) !== 1 ? 's' : ''} correctly guessed this was fake!
+              </p>
+            )}
           </Card>
         )}
 
@@ -629,6 +739,8 @@ const Room = () => {
                 text={
                   gameMode === 'caption-cascade'
                     ? `🎉 Caption Cascade Results! 🎉\n\nWinning Caption: "${winner.submission?.text}"\nby ${winner.submission?.playerName}\n\n${winner.votes} vote${winner.votes !== 1 ? 's' : ''}!\n\nWant to play? ${roomLink}`
+                    : gameMode === 'two-truths'
+                    ? `🎉 Two Truths and a Bot Results! 🎉\n\nMost Believed: "${winner.submission?.text}"\nby ${winner.submission?.playerName}\n\nAI Fake: "${aiSubmission?.text}"\n${winner.aiVotes || 0} guessed correctly!\n\nWant to play? ${roomLink}`
                     : `🎉 Quippy Game Results! 🎉\n\nPrompt: ${currentPrompt}\n\nWinner: ${winner.submission?.playerName}\nAnswer: "${winner.submission?.text}"\n\nAI Answer: "${aiSubmission?.text}"\n\nWant to play? ${roomLink}`
                 }
               />

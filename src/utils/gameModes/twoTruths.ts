@@ -1,25 +1,21 @@
-export const AI_STATEMENTS = [
+const AI_STATEMENTS = [
   "I once met a celebrity at a coffee shop",
   "I can speak three languages fluently",
-  "I've visited 15 countries",
+  "I've visited 15 different countries",
   "I was on a game show once",
-  "I have a fear of butterflies",
   "I collect vintage postcards",
   "I've run a marathon",
-  "I can solve a Rubik's cube in under a minute",
 ];
 
-export const SIMULATED_STATEMENTS = [
+const SIMULATED_STATEMENTS = [
   "I'm allergic to cats",
   "I've never broken a bone",
-  "I hate the smell of coffee",
   "I can't whistle",
   "I sleep with socks on",
-  "I've never been on a plane",
-  "I always eat dessert first",
   "I talk to my plants",
   "I've watched the same movie 20+ times",
   "I can't swim",
+  "I hate the smell of coffee",
 ];
 
 export function getRandomAIStatement(): string {
