@@ -555,8 +555,8 @@ const Room = () => {
                 <h3 className="font-semibold">Share Your Results</h3>
               </div>
               <WhatsAppShareButton
-                text={`🎉 Just played Quippy!\nWinning answer: "${winner.submission?.text}"\nJoin us!`}
-                url={roomLink}
+                text={`🎉 Quippy Recap 🎉\n\nPrompt: ${currentPrompt}\n\nWinner: ${winner.submission?.playerName} with "${winner.submission?.text}" (${winner.votes} vote${winner.votes !== 1 ? 's' : ''})\n\nThe AI wrote: "${aiSubmission?.text}"\n\nWant to play? ${roomLink}`}
+                url=""
               />
             </div>
           </Card>
