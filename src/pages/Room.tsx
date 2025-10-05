@@ -793,7 +793,7 @@ const Room = () => {
                           }
                         }
                         if (hasVotedFor) return 'Voted!';
-                        if (gameMode === 'two-truths') return 'Vote as Fake';
+                        if (gameMode === 'two-truths') return t('voteAsFake');
                         return 'Vote for This';
                       })()}
                     </Button>
