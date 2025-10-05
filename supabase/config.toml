@@ -1,1 +1,4 @@
 project_id = "bfunjbjqapqafaihmmlq"
+
+[functions.manage-room]
+verify_jwt = false
