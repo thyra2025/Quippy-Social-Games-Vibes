@@ -170,6 +170,8 @@ const Room = () => {
   useEffect(() => {
     if (gamePhase !== 'voting' || simulatedPlayers.length === 0 || submissions.length === 0) return;
 
+    console.log('🤖 Setting up simulated voting for', simulatedPlayers.length, 'players');
+
     simulatedPlayers.forEach((player) => {
       const delay = 8000 + Math.random() * 7000; // 8-15 seconds
       
@@ -179,7 +181,10 @@ const Room = () => {
           s => !s.isAI && s.playerId !== player.id
         );
 
-        if (votableSubmissions.length === 0) return;
+        if (votableSubmissions.length === 0) {
+          console.log('⚠️ No votable submissions for', player.name);
+          return;
+        }
 
         // Slightly favor longer/funnier answers
         const weights = votableSubmissions.map(s => {
@@ -210,12 +215,34 @@ const Room = () => {
           isSimulated: true,
         };
 
-        setVotes(prev => [...prev, vote]);
+        console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '...');
+        setVotes(prev => {
+          const newVotes = [...prev, vote];
+          console.log('📊 Vote count:', newVotes.length);
+          return newVotes;
+        });
       }, delay);
 
       return () => clearTimeout(timerId);
     });
   }, [gamePhase, submissions.length, simulatedPlayers.length]);
+
+  // Auto-advance to recap when all votes are in
+  useEffect(() => {
+    if (gamePhase !== 'voting') return;
+
+    const totalPlayers = 1 + simulatedPlayers.length; // Real player + simulated players
+    const currentVoteCount = votes.length;
+
+    console.log('🗳️ Voting status:', currentVoteCount, '/', totalPlayers, 'votes');
+
+    if (currentVoteCount >= totalPlayers) {
+      console.log('✨ All votes collected! Advancing to recap...');
+      setTimeout(() => {
+        setGamePhase('recap');
+      }, 1500);
+    }
+  }, [votes.length, gamePhase, simulatedPlayers.length]);
 
   const handleVote = (submissionId: string) => {
     const submission = submissions.find(s => s.id === submissionId);
@@ -234,7 +261,12 @@ const Room = () => {
       isSimulated: false,
     };
 
-    setVotes(prev => [...prev, newVote]);
+    console.log('👤 Real player voted for:', submission?.text.substring(0, 30) + '...');
+    setVotes(prev => {
+      const newVotes = [...prev, newVote];
+      console.log('📊 Vote count after player vote:', newVotes.length);
+      return newVotes;
+    });
     setHasVoted(true);
 
     toast({
@@ -242,13 +274,7 @@ const Room = () => {
       description: "Waiting for other players...",
     });
 
-    // Check if all players have voted
-    const totalPlayers = 1 + simulatedPlayers.length;
-    if (votes.length + 1 >= totalPlayers) {
-      setTimeout(() => {
-        setGamePhase('recap');
-      }, 1500);
-    }
+    // Note: Phase transition is now handled by the useEffect monitoring votes.length
   };
 
   const handlePlayAgain = () => {
