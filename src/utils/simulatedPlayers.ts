@@ -17,7 +17,22 @@ export const SIMULATED_ANSWERS = [
   "My sock drawer needed immediate reorganization",
   "I was teaching my dog quantum physics",
   "I fell into a TikTok hole about medieval times",
-  "I was calculating the optimal pillow arrangement"
+  "I was calculating the optimal pillow arrangement",
+  "I once Googled 'is water wet' at 3am",
+  "Caution: may talk about my dog for 45 minutes",
+  "Don't Stop Believin' and I won't apologize",
+  "Someone said I have 'interesting eyebrows'",
+  "Whales. They're too big and mysterious.",
+  "I'd warn my past self about that haircut",
+  "I can fold a fitted sheet perfectly",
+  "A singing fish. It still haunts me.",
+  "Pineapple on pizza is elite",
+  "Literally anything involving math",
+  "Ice cream straight from the tub",
+  "Mr. Rockington",
+  "The skull emoji but ironically",
+  "Check if I locked the door 17 times",
+  "Walmart brand Chris Hemsworth"
 ];
 
 const AVATAR_COLORS = [
