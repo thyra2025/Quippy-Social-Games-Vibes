@@ -60,6 +60,7 @@ const Room = () => {
   const [selectedTriviaAnswer, setSelectedTriviaAnswer] = useState<number | null>(null);
   const [currentRoundNumber] = useState(1); // Track round number for database queries
   const [usedCaptionsThisRound, setUsedCaptionsThisRound] = useState<string[]>([]); // Track used captions to prevent duplicates
+  const [votedPlayerIds, setVotedPlayerIds] = useState<string[]>([]); // Track which simulated players have voted to prevent duplicates
 
   const timerDuration = gameMode === 'instant-trivia' ? 30 : 45;
   const { seconds, start: startTimer, reset: resetTimer } = useCountdown(timerDuration, () => {
@@ -671,9 +672,20 @@ const Room = () => {
     console.log('🤖 Setting up simulated voting for', simulatedPlayers.length, 'players');
 
     simulatedPlayers.forEach((player) => {
+      // Skip if this player already voted
+      if (votedPlayerIds.includes(player.id)) {
+        console.log('⚠️', player.name, 'already voted, skipping');
+        return;
+      }
+      
       const delay = 8000 + Math.random() * 7000;
       
       const timerId = setTimeout(async () => {
+        // Check again before voting (in case of race condition)
+        if (votedPlayerIds.includes(player.id)) {
+          console.log('⚠️', player.name, 'already voted (double-check), skipping');
+          return;
+        }
         console.log('🗳️', player.name, 'checking submissions:', submissions.map(s => ({ 
           text: s.text.substring(0, 20), 
           isAI: s.isAI, 
@@ -742,7 +754,11 @@ const Room = () => {
             });
 
           if (error) throw error;
-          console.log('✅', player.name, 'voted for:', chosenSubmission.text.substring(0, 30) + '... (isAI:', chosenSubmission.isAI, ')');
+          
+          // Mark player as voted
+          setVotedPlayerIds(prev => [...prev, player.id]);
+          
+          console.log('✅', player.name, 'voted successfully for:', chosenSubmission.text.substring(0, 30) + '... (isAI:', chosenSubmission.isAI, ')');
         } catch (error) {
           console.error('Error saving simulated vote:', error);
         }
@@ -750,7 +766,15 @@ const Room = () => {
 
       return () => clearTimeout(timerId);
     });
-  }, [gamePhase, submissions.length, simulatedPlayers.length]);
+  }, [gamePhase, submissions.length, simulatedPlayers.length, votedPlayerIds]);
+
+  // Reset voted players when entering playing phase
+  useEffect(() => {
+    if (gamePhase === 'playing') {
+      setVotedPlayerIds([]);
+      console.log('🔄 Reset voted player tracking for new round');
+    }
+  }, [gamePhase]);
 
   // Auto-advance to recap when all votes are in
   useEffect(() => {
