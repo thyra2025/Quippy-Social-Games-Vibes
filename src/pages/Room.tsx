@@ -59,6 +59,7 @@ const Room = () => {
   const [triviaAnswers, setTriviaAnswers] = useState<TriviaAnswer[]>([]);
   const [selectedTriviaAnswer, setSelectedTriviaAnswer] = useState<number | null>(null);
   const [currentRoundNumber] = useState(1); // Track round number for database queries
+  const [usedCaptionsThisRound, setUsedCaptionsThisRound] = useState<string[]>([]); // Track used captions to prevent duplicates
 
   const timerDuration = gameMode === 'instant-trivia' ? 30 : 45;
   const { seconds, start: startTimer, reset: resetTimer } = useCountdown(timerDuration, () => {
@@ -106,6 +107,13 @@ const Room = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Reset caption tracking when entering playing phase
+  useEffect(() => {
+    if (gamePhase === 'playing' && gameMode === 'caption-cascade') {
+      setUsedCaptionsThisRound([]);
+    }
+  }, [gamePhase, gameMode]);
 
   // Real-time subscription for game phase synchronization
   useEffect(() => {
@@ -440,17 +448,17 @@ const Room = () => {
               // Get all captions for this image
               const allCaptionsForImage = CAPTIONS_BY_IMAGE[currentImage.id]?.[language as CaptionLanguage] || [];
               
-              // Get already used captions from submissions
-              const usedCaptions = new Set(submissions.map(s => s.text));
+              // Filter out already used captions in this round
+              const availableCaptions = allCaptionsForImage.filter(c => !usedCaptionsThisRound.includes(c));
               
-              // Filter out used captions
-              const availableCaptions = allCaptionsForImage.filter(c => !usedCaptions.has(c));
-              
-              // If all captions are used, fall back to all captions
+              // If all captions are used, reset and use all captions
               const captionsToUse = availableCaptions.length > 0 ? availableCaptions : allCaptionsForImage;
               
-              // Select a random caption from available ones
+              // Select a random caption
               answerText = captionsToUse[Math.floor(Math.random() * captionsToUse.length)];
+              
+              // Track this caption as used
+              setUsedCaptionsThisRound(prev => [...prev, answerText]);
             }
           } else if (gameMode === 'two-truths') {
             answerText = getRandomStatement(language);
@@ -774,6 +782,7 @@ const Room = () => {
     setTriviaAnswers([]);
     setSelectedTriviaAnswer(null);
     setCurrentTriviaQuestion(null);
+    setUsedCaptionsThisRound([]); // Reset caption tracking for new round
     
     // Small delay to ensure state is cleared
     setTimeout(() => {
