@@ -15,7 +15,7 @@ import { Player } from '@/pages/Lobby';
 import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
 import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer, GAME_MODES } from '@/types/game';
 import { getRandomPrompt, getAIAnswer, getSimulatedAnswer } from '@/utils/gameModes/whoWroteThis';
-import { getRandomImage, CAPTIONS_BY_IMAGE, CaptionImage, type Language as CaptionLanguage } from '@/utils/gameModes/captionCascade';
+import { getRandomImage, CAPTIONS_BY_IMAGE, CAPTION_IMAGES, CaptionImage, type Language as CaptionLanguage } from '@/utils/gameModes/captionCascade';
 import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
 import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
 import { saveRecap } from '@/utils/partyFeedStorage';
@@ -397,7 +397,12 @@ const Room = () => {
       console.log('🎮 Received prompt:', newPrompt);
       setCurrentPrompt(newPrompt);
     } else if (gameMode === 'caption-cascade') {
-      setCurrentImage(getRandomImage());
+      const selectedImage = getRandomImage();
+      console.log("=== CAPTION CASCADE DEBUG ===");
+      console.log("Selected image URL:", selectedImage.url);
+      console.log("Selected image object:", JSON.stringify(selectedImage));
+      console.log("Available images:", CAPTION_IMAGES.map(img => ({ id: img.id, alt: img.alt })));
+      setCurrentImage(selectedImage);
     } else if (gameMode === 'two-truths') {
       newPrompt = t('writeTrueStatement');
       setCurrentPrompt(newPrompt);
@@ -445,6 +450,8 @@ const Room = () => {
             answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
             if (currentImage) {
+              console.log("--- Selecting caption for player:", player.name, "---");
+              console.log("Current image being displayed:", currentImage);
               console.log('📸 Current image:', currentImage.url);
               console.log('🎯 Image ID:', currentImage.id);
               
@@ -460,6 +467,7 @@ const Room = () => {
               // Get captions in current language, fallback to English if not available
               const allCaptionsForImage = imageCaptions[language as CaptionLanguage] || imageCaptions['en'] || [];
               
+              console.log("Caption bank being used:", allCaptionsForImage);
               console.log('💬 Available captions for this image:', allCaptionsForImage.length, 'captions');
               console.log('🔍 Language:', language, '- Captions exist:', !!imageCaptions[language as CaptionLanguage]);
               
@@ -484,6 +492,7 @@ const Room = () => {
               // Select a random caption
               answerText = captionsToUse[Math.floor(Math.random() * captionsToUse.length)];
               
+              console.log("Selected caption:", answerText);
               console.log('🎲 Selected caption:', answerText);
               console.log('✅ Image and caption match confirmed for:', currentImage.id);
               
