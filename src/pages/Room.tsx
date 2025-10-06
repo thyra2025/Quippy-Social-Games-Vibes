@@ -445,17 +445,47 @@ const Room = () => {
             answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
             if (currentImage) {
-              // Get all captions for this image
-              const allCaptionsForImage = CAPTIONS_BY_IMAGE[currentImage.id]?.[language as CaptionLanguage] || [];
+              console.log('📸 Current image:', currentImage.url);
+              console.log('🎯 Image ID:', currentImage.id);
               
-              // Filter out already used captions in this round
-              const availableCaptions = allCaptionsForImage.filter(c => !usedCaptionsThisRound.includes(c));
+              // Get all captions for this specific image in the current language
+              const imageCaptions = CAPTIONS_BY_IMAGE[currentImage.id];
+              
+              if (!imageCaptions) {
+                console.error('❌ No captions found for image ID:', currentImage.id);
+                console.log('Available image IDs:', Object.keys(CAPTIONS_BY_IMAGE));
+                return;
+              }
+              
+              // Get captions in current language, fallback to English if not available
+              const allCaptionsForImage = imageCaptions[language as CaptionLanguage] || imageCaptions['en'] || [];
+              
+              console.log('💬 Available captions for this image:', allCaptionsForImage.length, 'captions');
+              console.log('🔍 Language:', language, '- Captions exist:', !!imageCaptions[language as CaptionLanguage]);
+              
+              if (allCaptionsForImage.length === 0) {
+                console.error('❌ No captions available for image:', currentImage.id, 'language:', language);
+                return;
+              }
+              
+              // Get already submitted captions in this round
+              const alreadySubmittedCaptions = submissions.map(s => s.text);
+              
+              // Filter out already used captions (including those submitted by other players)
+              const availableCaptions = allCaptionsForImage.filter(
+                c => !usedCaptionsThisRound.includes(c) && !alreadySubmittedCaptions.includes(c)
+              );
+              
+              console.log('✅ Available unused captions:', availableCaptions.length);
               
               // If all captions are used, reset and use all captions
               const captionsToUse = availableCaptions.length > 0 ? availableCaptions : allCaptionsForImage;
               
               // Select a random caption
               answerText = captionsToUse[Math.floor(Math.random() * captionsToUse.length)];
+              
+              console.log('🎲 Selected caption:', answerText);
+              console.log('✅ Image and caption match confirmed for:', currentImage.id);
               
               // Track this caption as used
               setUsedCaptionsThisRound(prev => [...prev, answerText]);
