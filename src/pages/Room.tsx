@@ -15,7 +15,7 @@ import { Player } from '@/pages/Lobby';
 import { getRandomSimulatedAnswer } from '@/utils/simulatedPlayers';
 import { GameMode, Submission, Vote, TriviaQuestion, TriviaAnswer, GAME_MODES } from '@/types/game';
 import { getRandomPrompt, getAIAnswer, getSimulatedAnswer } from '@/utils/gameModes/whoWroteThis';
-import { getRandomImage, getRandomCaption, CaptionImage } from '@/utils/gameModes/captionCascade';
+import { getRandomImage, CAPTIONS_BY_IMAGE, CaptionImage, type Language as CaptionLanguage } from '@/utils/gameModes/captionCascade';
 import { getRandomAIStatement, getRandomStatement } from '@/utils/gameModes/twoTruths';
 import { getRandomQuestion, shouldSimulatedPlayerAnswerCorrectly } from '@/utils/gameModes/instantTrivia';
 import { saveRecap } from '@/utils/partyFeedStorage';
@@ -436,7 +436,22 @@ const Room = () => {
           if (gameMode === 'who-wrote-this') {
             answerText = getSimulatedAnswer(currentPrompt, language);
           } else if (gameMode === 'caption-cascade') {
-            answerText = currentImage ? getRandomCaption(currentImage.id, language) : '';
+            if (currentImage) {
+              // Get all captions for this image
+              const allCaptionsForImage = CAPTIONS_BY_IMAGE[currentImage.id]?.[language as CaptionLanguage] || [];
+              
+              // Get already used captions from submissions
+              const usedCaptions = new Set(submissions.map(s => s.text));
+              
+              // Filter out used captions
+              const availableCaptions = allCaptionsForImage.filter(c => !usedCaptions.has(c));
+              
+              // If all captions are used, fall back to all captions
+              const captionsToUse = availableCaptions.length > 0 ? availableCaptions : allCaptionsForImage;
+              
+              // Select a random caption from available ones
+              answerText = captionsToUse[Math.floor(Math.random() * captionsToUse.length)];
+            }
           } else if (gameMode === 'two-truths') {
             answerText = getRandomStatement(language);
           }

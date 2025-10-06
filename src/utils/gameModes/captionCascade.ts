@@ -64,11 +64,13 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
       "When someone explains cryptocurrency",
       "Me pretending to understand the meeting",
       "Trying to look busy at work",
-      "When the code doesn't make sense",
-      "My face during technical interviews",
-      "Researching at 2am",
-      "Me Googling obvious questions",
-      "When WiFi is slow"
+      "When the code works but you have no idea why",
+      "My brain during technical interviews",
+      "Researching at 2am like it'll make sense",
+      "Me Googling 'how to look smart'",
+      "When WiFi is slower than my career growth",
+      "Staring at my problems until they fix themselves",
+      "When they ask me to explain my own code"
     ],
     es: [
       "Cuando alguien explica criptomonedas",
@@ -114,13 +116,15 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   'dog-sunglasses': {
     en: [
       "Too cool for Monday",
-      "When you finally get the joke",
-      "Living my best life",
-      "Me after one compliment",
-      "Feeling myself today",
-      "When the weekend hits",
-      "Just vibing",
-      "Main character energy"
+      "When you finally get the joke from 3 days ago",
+      "Living my best life on $47",
+      "Me after one compliment from a stranger",
+      "Feeling myself after 8 hours of sleep",
+      "When the weekend hits and responsibilities don't",
+      "Zero thoughts, just vibes",
+      "Main character who peaked in this moment",
+      "When you wear sunglasses indoors and own it",
+      "Me pretending I have my life together"
     ],
     es: [
       "Demasiado cool para el lunes",
@@ -165,14 +169,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'surprised-face': {
     en: [
-      "When they say it's free",
-      "Me seeing my exam results",
-      "Plot twist of the century",
-      "Wait, what just happened?",
-      "When you get unexpected good news",
-      "My face when plans actually work",
-      "Did I hear that correctly?",
-      "When the price is lower than expected"
+      "When they say 'it's on the house'",
+      "Me seeing my exam results were actually good",
+      "The plot twist nobody saw coming",
+      "Wait, people actually like me?",
+      "When you check your bank account and it's positive",
+      "My face when plans work out for once",
+      "They said WHAT about me?",
+      "When the date doesn't ghost you",
+      "Finding money in old jacket pockets",
+      "When autocorrect actually helps instead of ruins"
     ],
     es: [
       "Cuando dicen que es gratis",
@@ -217,14 +223,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'confused-dog': {
     en: [
-      "When someone explains cryptocurrency",
-      "Me trying to understand my bank statement",
-      "Waiting for them to say 'good news'",
-      "When they say 'we need to talk'",
-      "My face during Zoom meetings",
-      "Trying to remember where I parked",
-      "What did I just agree to?",
-      "Processing what they just said"
+      "When someone explains blockchain for the third time",
+      "Me trying to understand why I'm broke",
+      "Waiting for the bad news after 'so...'",
+      "When they text 'we need to talk' at 11pm",
+      "My brain during literally any Zoom meeting",
+      "Trying to remember if I locked the door",
+      "What did I just agree to sign?",
+      "Still processing what happened in 2020",
+      "When someone says 'make it make sense'",
+      "Me understanding modern dating"
     ],
     es: [
       "Cuando alguien explica las criptomonedas",
@@ -269,14 +277,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'cat-box': {
     en: [
-      "If I fits, I sits",
-      "This is my life now",
-      "Peak comfort achieved",
-      "Hiding from responsibilities",
-      "My safe space",
-      "Introvert paradise",
-      "Found my spot",
-      "Don't talk to me I'm in my zone"
+      "If I fits, I sits and quits",
+      "This is my life now and I'm at peace",
+      "Peak comfort achieved, do not disturb",
+      "Hiding from responsibilities like a pro",
+      "My emotional support box",
+      "Introvert paradise: population me",
+      "Found my vibe, staying forever",
+      "Don't talk to me I'm in my zone of denial",
+      "Living my best life in 2 square feet",
+      "When you find the perfect hiding spot from adulting"
     ],
     es: [
       "Si quepo, me siento",
@@ -321,14 +331,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'stressed-worker': {
     en: [
-      "When you realize it's only Tuesday",
-      "Reading the group project chat",
-      "Me doing my taxes",
-      "That email could have been avoided",
-      "Checking my bank account",
-      "When WiFi dies during work",
-      "Monday morning meetings",
-      "When the deadline was yesterday"
+      "When she asks if I read the 47-page report",
+      "Explaining my raise using only vibes",
+      "Her: serious discussion. Me: thinking about lunch",
+      "Nodding like I understand the budget spreadsheet",
+      "Realizing you're in the wrong meeting",
+      "Pretending my idea wasn't Googled 5 minutes ago",
+      "When she says 'quick question' at 4:59pm",
+      "Acting like I wasn't on mute the whole time",
+      "The moment you realize you replied-all",
+      "My face when Teams crashes mid-presentation"
     ],
     es: [
       "Cuando te das cuenta de que solo es martes",
@@ -373,14 +385,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'baby-laughing': {
     en: [
-      "When you cause chaos and get away with it",
-      "Me after a good nap",
-      "Pure unfiltered joy",
-      "When the food arrives",
-      "Laughing at my own jokes",
-      "No thoughts, just vibes",
-      "When plans get cancelled",
-      "Me enjoying the simple things"
+      "When you cause chaos and everyone blames someone else",
+      "Me after 8 hours of uninterrupted sleep",
+      "Pure unfiltered joy before bills existed",
+      "When the food delivery arrives early",
+      "Laughing at my own jokes because I'm hilarious",
+      "Zero thoughts, maximum vibes, living the dream",
+      "When plans get cancelled and you're secretly relieved",
+      "Me enjoying the simple things like breathing air",
+      "When you get away with something ridiculous",
+      "Living proof that ignorance is bliss"
     ],
     es: [
       "Cuando causas caos y te sales con la tuya",
@@ -425,14 +439,16 @@ export const CAPTIONS_BY_IMAGE: Record<string, Record<Language, string[]>> = {
   },
   'confused-laptop': {
     en: [
-      "Trying to understand this error message",
-      "When code works but you don't know why",
-      "Me pretending I read the terms",
-      "Googling how to adult",
-      "My face during online meetings",
-      "Why isn't this working",
-      "Reading documentation at 3am",
-      "When the tutorial skips steps"
+      "Trying to understand why my code hates me",
+      "When code works but Stack Overflow can't explain why",
+      "Me pretending I read those 47 terms and conditions",
+      "Googling 'how to adult without crying'",
+      "My brain during every single online meeting",
+      "Why isn't this working when it worked yesterday",
+      "Reading documentation at 3am like it'll suddenly click",
+      "When the tutorial skips the exact step you needed",
+      "Me understanding my own code from 2 weeks ago",
+      "When you realize you've been spelling it wrong for hours"
     ],
     es: [
       "Tratando de entender este mensaje de error",
